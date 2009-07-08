@@ -165,6 +165,10 @@ public final class Snapshots {
 				memptr--;
 				is.read(repeat_params);
 				int counter=(repeat_params[0]&0xff);
+				if(counter==0) {
+					LOG.error("Zero count of bytes detected in Z80 compressed block.");
+					System.exit(1);
+				}
 				LOG.debug("Bytes "+Hex.intToHex2(repeat_params[1])+" x "+
 						counter+" -> "+Hex.intToHex4(memptr));
 				
@@ -188,6 +192,7 @@ public final class Snapshots {
 	}
 	
 	private static void checkFinalSignature(InputStream is) {
+		LOG.debug("Checking Z80 final signature (should be 00eded00).");
 		byte[] final_signature=new byte[4];
 
 		try {
@@ -391,20 +396,113 @@ public final class Snapshots {
 			failZ80(e);
 		}
 	}
-	
-	/* TODO: should be implemented after testing SNA save & load */
+
 	public static void saveZ80Header(OutputStream os, Z80 z80, SpectrumULA ula) {
-		LOG.info("Not implemented.");
+		byte[] header=new byte[30];
+		memory=ula.getMemory();
+		
+		header[0]=z80.getReg(Z80.A);
+		header[1]=z80.getReg(Z80.F);
+		header[2]=z80.getReg(Z80.C);
+		header[3]=z80.getReg(Z80.B);
+		header[4]=z80.getReg(Z80.L);
+		header[5]=z80.getReg(Z80.H);
+		header[6]=z80.getReg(Z80.PCL);
+		header[7]=z80.getReg(Z80.PCH);
+		header[8]=z80.getReg(Z80.SPL);
+		header[9]=z80.getReg(Z80.SPH);
+		header[10]=z80.getReg(Z80.I);
+		header[11]=z80.getReg(Z80.R);
+		header[12]=(byte)(0x20 | ((ula.getBorder() & 7) << 1) |
+				((z80.getReg(Z80.R) & 0x80) >> 7));
+		header[13]=z80.getReg(Z80.E);
+		header[14]=z80.getReg(Z80.D);
+		header[15]=z80.getReg(Z80.C_ALT);
+		header[16]=z80.getReg(Z80.B_ALT);
+		header[17]=z80.getReg(Z80.E_ALT);
+		header[18]=z80.getReg(Z80.D_ALT);
+		header[19]=z80.getReg(Z80.L_ALT);
+		header[20]=z80.getReg(Z80.H_ALT);
+		header[21]=z80.getReg(Z80.A_ALT);
+		header[22]=z80.getReg(Z80.F_ALT);
+		header[23]=z80.getReg(Z80.YL);
+		header[24]=z80.getReg(Z80.YH);
+		header[25]=z80.getReg(Z80.XL);
+		header[26]=z80.getReg(Z80.XH);
+		int im_iff=z80.getReg(Z80.IM_IFF);
+		header[27]=(byte)(im_iff & 1);
+		header[28]=(byte)((im_iff & 2) >> 1);
+		header[29]=(byte)((im_iff & 0xc) >> 2);
+		try {
+			LOG.debug("Writing Z80 header.");
+			os.write(header);
+		} catch (IOException e) {
+			failWriteZ80(e);
+		}
 	}
 	
-	/* TODO: should be implemented after testing SNA save & load */
+	private static int compr_read_byte()
+	{
+		if(memptr < 0x10000) {
+			return memory[memptr++] & 0xff;
+		} else {
+			return -1;
+		}
+	}
+
 	public static void saveZ80Contents(OutputStream os) {
-		LOG.info("Not implemented.");
+		int j, c, lc, lled, num;
+		boolean rep=false;
+
+		c = compr_read_byte();
+		lc = 0;
+		num = 0;
+
+		try {
+			while(c >= 0) {
+				if(lc == 0xed) lled = 1;
+				else lled = 0;
+
+				lc = c;
+				c = compr_read_byte();
+				if((c == lc) && (num != 255) && ((lled==0) || rep)) {
+					if(!rep) {
+						num = 1;
+						rep = true;
+					}
+					num++;
+				}
+				else {
+					if(!rep) {
+						if(num < 5 && lc != 0xED) for(j = 0; j < num; j++)
+							os.write(lc);
+						else {
+							os.write(0xed);
+							os.write(0xed);
+							os.write(num);
+							os.write(lc);
+							num = 0;
+						}
+						rep = false;
+					} else {
+						os.write(lc);
+					}
+				}
+			}
+
+			os.write(0x00);
+			os.write(0xed);
+			os.write(0xed);
+			os.write(0x00);
+		} catch (IOException e) {
+			failWriteZ80(e);
+		}
 	}
 	
 	public static void saveZ80(OutputStream os, Z80 z80, SpectrumULA ula) {
 		synchronized(z80) {
 			saveZ80Header(os,z80,ula);
+			memptr=0x4000;
 			saveZ80Contents(os);
 
 			try {
