@@ -1,6 +1,4 @@
-package org.mn.z80util.testbench;
-
-import org.mn.z80util.z80.*;
+package org.mn.z80util.z80;
 
 public class MockAddressBusProvider implements AddressBusProvider {
 

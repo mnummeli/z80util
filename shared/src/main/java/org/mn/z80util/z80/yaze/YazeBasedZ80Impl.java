@@ -49,7 +49,6 @@ public class YazeBasedZ80Impl implements Z80 {
 		alu.af(rand.nextInt());
 		haltState=false;
 		setReg(IM_IFF,(byte)0x00);
-		
 		setRegPair(PC,(short)0x0000);
 	}
 	
