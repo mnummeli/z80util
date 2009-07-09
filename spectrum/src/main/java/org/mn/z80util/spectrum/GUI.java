@@ -30,7 +30,6 @@ import javax.swing.*;
 import org.apache.log4j.*;
 import org.mn.z80util.*;
 
-
 public class GUI extends JFrame {
 	private DebuggerFrame debugger;
 	private JCheckBoxMenuItem debuggerItem;
