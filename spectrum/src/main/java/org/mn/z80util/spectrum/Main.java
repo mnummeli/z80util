@@ -57,19 +57,14 @@ public class Main {
 				SpectrumULA ula         = new SpectrumULA();
 				SpectrumZ80Clock clock  = new SpectrumZ80Clock();
 				SpectrumScreen scr  = new SpectrumScreen();
-				SpectrumKeyboard kb     = new SpectrumKeyboard();
-				MenuControls controller = new MenuControls();
-				StatusPanel statusPanel	= new StatusPanel();
+				SpectrumControls controller = new SpectrumControls();
 				
 				/* Wires the components together */
 				z80.setUla(ula);
 				ula.setScreen(scr);
 				clock.setZ80(z80);
 				clock.setUla(ula);
-				clock.setStatusPanel(statusPanel);
 				scr.setUla(ula);
-				kb.setUla(ula);
-				kb.setClock(clock);
 				controller.setUla(ula);
 				controller.setZ80(z80);
 				controller.setClock(clock);
@@ -101,7 +96,7 @@ public class Main {
 					Snapshots.loadSNA(SNAFileName,z80,ula);
 				}
 				
-				new GUI(controller,statusPanel,scr,kb);
+				new GUI(controller, scr);
 				
 				/* Starts the machine */
 				new Thread(clock,"Spectrum").start();

@@ -102,7 +102,7 @@ public class SpectrumScreen extends JPanel {
 		int b=ula.getBorder();
 		g.setColor(spectrumColors[b]);
 		if((row<BORDER_WIDTH) || (row>=BORDER_WIDTH+PAPER_HEIGHT)) {
-			g.fillRect(0,SCALE*row,SCALE*WIDTH,SCALE);
+			g.fillRect(0,SCALE*row,SCALE*WIDTH, SCALE);
 		} else {
 			g.fillRect(0,SCALE*row,SCALE*BORDER_WIDTH,SCALE);
 			g.fillRect(SCALE*(BORDER_WIDTH+PAPER_WIDTH), SCALE*row,
@@ -114,27 +114,27 @@ public class SpectrumScreen extends JPanel {
 			int pixelRow=n&0x7;
 			int pixBase=0x4000|(characterRow<<5)|(pixelRow<<8)|(third<<11);
 			int attrBase=0x5800|(characterRow<<5)|(third<<8);
-			for(int i=0; i<PAPER_WIDTH; i++) {
+			for(int i=0; i< PAPER_WIDTH; i++) {
 				int c=i>>3;
 				byte attrCell=memory[attrBase+c];
 
 				/* INK:   -x---xxx */
-				int ink=(attrCell&0x7)|((attrCell&0x40)>>3);
+				int ink=(attrCell & 7) | ((attrCell & 0x40) >> 3);
 				
 				/* PAPER: -xxxx--- */
-				int paper=(attrCell&0x78)>>3;
+				int paper=(attrCell & 0x78) >> 3;
 
-				if(((attrCell&0x80)!=0) & ula.getFlashState()) {
+				if(((attrCell & 0x80) != 0) & ula.getFlashState()) {
 					/* FLASH: x------- */
 					int tmp=ink;
 					ink=paper;
 					paper=tmp;
 				}
-				int ind=i&0x7;
-				if((memory[pixBase+c]&(0x80>>ind))!=0) {
-					setPixel(i,ink);	
+				int ind=i & 7;
+				if((memory[pixBase+c] & (0x80 >> ind)) != 0) {
+					setPixel(i, ink);
 				} else {
-					setPixel(i,paper);
+					setPixel(i, paper);
 				}
 			}
 			g.drawImage(paperStripe, SCALE*BORDER_WIDTH, SCALE*row,
@@ -144,7 +144,7 @@ public class SpectrumScreen extends JPanel {
 
 	protected void paintComponent(Graphics g) {
 		Rectangle clipBounds = g.getClipBounds();
-		int y1=clipBounds.y/2, y2=(clipBounds.y+clipBounds.height)/2;
+		int y1=clipBounds.y/SCALE, y2=(clipBounds.y+clipBounds.height)/SCALE;
 		for(int i=y1; i<y2; i++) {
 			updateRowSync(g,i);
 		}

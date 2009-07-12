@@ -23,7 +23,6 @@ package org.mn.z80util.spectrum;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.*;
 
 import javax.swing.*;
 
@@ -36,8 +35,7 @@ public class GUI extends JFrame {
 	
 	Logger LOG=Logger.getLogger(GUI.class);
 	
-	public GUI(MenuControls controller, StatusPanel statusPanel,
-			SpectrumScreen scr, SpectrumKeyboard kb) {
+	public GUI(SpectrumControls controller, SpectrumScreen scr) {
 		LOG.info("Creating the GUI.");
 		setTitle("Spectrum emulator - (C) 2009, Mikko Nummelin");
 		
@@ -92,11 +90,9 @@ public class GUI extends JFrame {
 		helpMenu.add(aboutItem);
 		menubar.add(helpMenu);
 		
-		add(statusPanel,BorderLayout.NORTH);
-		
 		add(scr,BorderLayout.CENTER);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		addKeyListener(kb);
+		addKeyListener(controller);
 
 		pack();
 		setResizable(false);

@@ -1,5 +1,5 @@
 /*
- * Keyboard.java - Spectrum keyboard controller.
+ * SpectrumControls.java - Spectrum emulator keyboard and GUI controller class.
  * 
  * (C) 2009, Mikko Nummelin <mikko.nummelin@tkk.fi>
  * 
@@ -22,11 +22,15 @@
 package org.mn.z80util.spectrum;
 
 import java.awt.event.*;
+import java.io.*;
+import javax.swing.JFileChooser;
 
 import org.apache.log4j.*;
 
-public class SpectrumKeyboard implements KeyListener {
-	private Logger LOG=Logger.getLogger(SpectrumKeyboard.class);
+import org.mn.z80util.z80.*;
+
+public class SpectrumControls implements KeyListener, ActionListener {
+private Logger LOG=Logger.getLogger(SpectrumControls.class);
 	
 	private SpectrumULA ula;
 	public void setUla(SpectrumULA ula) {
@@ -36,6 +40,11 @@ public class SpectrumKeyboard implements KeyListener {
 	private SpectrumZ80Clock clock;
 	public void setClock(SpectrumZ80Clock clock) {
 		this.clock=clock;
+	}
+	
+	private Z80 z80;
+	public void setZ80(Z80 z80) {
+		this.z80=z80;
 	}
 
 	public void keyPressed(KeyEvent e) {
@@ -229,5 +238,52 @@ public class SpectrumKeyboard implements KeyListener {
 
 	public void keyTyped(KeyEvent e) {
 		/* Do nothing */
+	}
+	
+	/*
+	 * TODO: Snapshot handling MUST be taken out from event dispatch thread!
+	 */
+	public void actionPerformed(ActionEvent e) {
+		if(e.getActionCommand().equalsIgnoreCase("Open")) {
+			JFileChooser chooser = new JFileChooser();
+		    int returnVal = chooser.showOpenDialog(null);
+		    if(returnVal == JFileChooser.APPROVE_OPTION) {
+		    	try {
+		    		File f=chooser.getSelectedFile();
+		    		String ftype=Snapshots.fileType(f.getName());
+		    		if(ftype.equals("z80")) {
+		    			LOG.info("Loading Z80 file "+f.getName());
+		    			Snapshots.loadZ80(new FileInputStream(f),z80,ula);
+		    		} else if(ftype.equals("sna")) {
+		    			LOG.info("Loading SNA file "+f.getName());
+		    			Snapshots.loadSNA(new FileInputStream(f),z80,ula);
+		    		}
+				} catch (FileNotFoundException fnfe) {
+					LOG.warn("Unable to open selected file");
+				}
+		    }
+		} else if(e.getActionCommand().equalsIgnoreCase("Save")) {
+			JFileChooser chooser = new JFileChooser();
+		    int returnVal = chooser.showSaveDialog(null);
+		    if(returnVal == JFileChooser.APPROVE_OPTION) {
+		    	try {
+		    		File f=chooser.getSelectedFile();
+		    		String ftype=Snapshots.fileType(f.getName());
+		    		if(ftype.equals("z80")) {
+		    			LOG.info("Saving Z80 file "+f.getName());
+		    			Snapshots.saveZ80(new FileOutputStream(f),z80,ula);
+		    		} else if(ftype.equals("sna")) {
+		    			LOG.info("Saving SNA file "+f.getName());
+		    			Snapshots.saveSNA(new FileOutputStream(f),z80,ula);
+		    		} else {
+		    			LOG.warn("Attempted to save into unknown file type "+ftype+".");
+		    		}
+				} catch (FileNotFoundException fnfe) {
+					LOG.warn("Unable to open selected file");
+				}
+		    }
+		} else if (e.getActionCommand().equalsIgnoreCase("Exit")) {
+			System.exit(0);
+		}
 	}
 }

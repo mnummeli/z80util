@@ -41,11 +41,6 @@ public class SpectrumZ80Clock implements Runnable {
     public void setZ80(Z80 z80) {
         this.z80=z80;
     }
-    
-    private StatusPanel statusPanel;
-    public void setStatusPanel(StatusPanel statusPanel) {
-    	this.statusPanel=statusPanel;
-    }
 
     private boolean paused=false;
     private boolean stepMode=false;
@@ -57,15 +52,11 @@ public class SpectrumZ80Clock implements Runnable {
     public void runMode() {
         stepMode=false;
         paused=false;
-        statusPanel.setStatusPanelString("Running.");
-        statusPanel.repaint();
     }
     
     public void reset() {
     	stepMode=false;
     	paused=false;
-    	statusPanel.setStatusPanelString("Running.");
-        statusPanel.repaint();
     	z80.reset();
     }
 
@@ -84,8 +75,6 @@ public class SpectrumZ80Clock implements Runnable {
     		String cmdString=Hex.intToHex4(pc & 0xffff)+" "+dar.getHexDigits()+
     			dar.getCommand();
             LOG.debug(cmdString);
-            statusPanel.setStatusPanelString("Stepping, next command: "+cmdString);
-            statusPanel.repaint();
     	}
 
     	while(paused) {
@@ -163,8 +152,6 @@ public class SpectrumZ80Clock implements Runnable {
     public void run() {
         LOG.info("Starting the machine.");
         ula.markScreenDirty();
-        statusPanel.setStatusPanelString("Running.");
-        statusPanel.repaint();
         for(interrupts=0; true; interrupts++) {
         	processorInterruptPeriod();
         }
