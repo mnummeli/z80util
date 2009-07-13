@@ -46,7 +46,7 @@
   </bean>
 
   <!-- ULA's should implement interface org.mn.z80util.z80.AddressBusProvider -->
-  <bean id="ula" class="org.mn.z80util.testbench.MockAddressBusProvider"/>
+  <bean id="ula" class="org.mn.z80util.z80.MockAddressBusProvider"/>
 
   <!-- The actual test bench bean. Exactly two processors and some configuration
        options must be wired in. -->
