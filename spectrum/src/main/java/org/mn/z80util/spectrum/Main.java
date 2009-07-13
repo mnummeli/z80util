@@ -26,6 +26,7 @@ import javax.swing.*;
 import org.apache.log4j.*;
 
 /* Z80 related imports */
+import org.mn.z80util.spectrum.snapshots.Snapshots;
 import org.mn.z80util.z80.*;
 import org.mn.z80util.z80.qaop.*; // In reserve if one wants to wire the processor differently
 import org.mn.z80util.z80.yaze.*;

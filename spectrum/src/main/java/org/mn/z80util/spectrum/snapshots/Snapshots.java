@@ -19,13 +19,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
-package org.mn.z80util.spectrum;
+package org.mn.z80util.spectrum.snapshots;
 
 import java.io.*;
 
 import org.apache.log4j.Logger;
 
 import org.mn.z80util.disassembler.*;
+import org.mn.z80util.spectrum.SpectrumULA;
 import org.mn.z80util.z80.*;
 
 public final class Snapshots {

@@ -27,6 +27,7 @@ import javax.swing.JFileChooser;
 
 import org.apache.log4j.*;
 
+import org.mn.z80util.spectrum.snapshots.Snapshots;
 import org.mn.z80util.z80.*;
 
 public class SpectrumControls implements KeyListener, ActionListener {
