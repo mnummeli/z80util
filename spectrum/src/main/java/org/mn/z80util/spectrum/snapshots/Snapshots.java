@@ -40,22 +40,6 @@ public final class Snapshots {
 		String[] tokens=fileName.split("[/\\.]");
 		return tokens[tokens.length-1].toLowerCase();
 	}
-	
-	public static void loadROM(InputStream is, Z80 z80, SpectrumULA ula) {
-		memory=ula.getMemory();
-		try {
-			is.read(memory,0,0x4000);
-		} catch (NullPointerException npexc) {
-			LOG.error("ROM file not found.");
-			npexc.printStackTrace();
-			System.exit(1);
-		} catch (IOException ioexc) {
-			LOG.error("Unable to load ROM.");
-			ioexc.printStackTrace();
-			System.exit(1);
-		}
-		LOG.info("ROM successfully loaded.");
-	}
 
 	private static void failZ80(Exception e) {
 		LOG.error("Unable to read snapshot.");

@@ -26,7 +26,7 @@ import javax.swing.*;
 import org.apache.log4j.*;
 
 /* Z80 related imports */
-import org.mn.z80util.spectrum.snapshots.Snapshots;
+import org.mn.z80util.spectrum.snapshots.*;
 import org.mn.z80util.z80.*;
 import org.mn.z80util.z80.qaop.*; // In reserve if one wants to wire the processor differently
 import org.mn.z80util.z80.yaze.*;
@@ -90,11 +90,15 @@ public class Main {
 						LOG.info("SNA file name: "+SNAFileName);
 					}
 				}
-				Snapshots.loadROM(Main.class.getResourceAsStream("/"+ROMFileName),z80,ula);
+				ula.loadROM(Main.class.getResourceAsStream("/"+ROMFileName));
 				if(Z80FileName!=null) {
-					Snapshots.loadZ80(Z80FileName,z80,ula);
+					AbstractSpectrumSnapshot snsh=
+						new Z80Snapshot(Z80FileName);
+					snsh.write(z80,ula);
 				} else if(SNAFileName!=null) {
-					Snapshots.loadSNA(SNAFileName,z80,ula);
+					AbstractSpectrumSnapshot snsh=
+						new SNASnapshot(SNAFileName);
+					snsh.write(z80,ula);
 				}
 				
 				new GUI(controller, scr);

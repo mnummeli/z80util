@@ -21,6 +21,8 @@
 
 package org.mn.z80util.spectrum;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 import org.apache.log4j.*;
@@ -86,6 +88,27 @@ public class SpectrumULA implements AddressBusProvider {
 		return (short)(low|(high<<8));
 	}
 
+	/**
+	 * Loads Spectrum ROM
+	 * 
+	 * @param is	Input stream where the ROM is in uncompressed plain
+	 * 				format.
+	 */
+	public void loadROM(InputStream is) {
+		try {
+			is.read(memory,0,0x4000);
+		} catch (NullPointerException npexc) {
+			LOG.error("ROM file not found.");
+			npexc.printStackTrace();
+			System.exit(1);
+		} catch (IOException ioexc) {
+			LOG.error("Unable to load ROM.");
+			ioexc.printStackTrace();
+			System.exit(1);
+		}
+		LOG.info("ROM successfully loaded.");
+	}
+	
 	public void markScreenDirty() {
 		for(int i=0;i<296;i++) {
 			screenLineUpdateRequest[i]=true;

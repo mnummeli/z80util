@@ -33,14 +33,6 @@ public interface Snapshot {
 	 * @param is	The input stream.
 	 */
 	void read(InputStream is);
-
-	/**
-	 * Reads the snapshot contents from specified processor configuration.
-	 * 
-	 * @param z80	The source processor
-	 * @param ula	The source memory provider
-	 */
-	void read(Z80 z80, AddressBusProvider ula);
 	
 	/**
 	 * Writes the snapshot to specified output stream.
@@ -49,14 +41,6 @@ public interface Snapshot {
 	 * @param os	The output stream.
 	 */
 	void write(OutputStream os);
-	
-	/**
-	 * Writes the snapshot to specified processor configuration.
-	 * 
-	 * @param z80	The target processor
-	 * @param ula	The target memory provider
-	 */
-	void write(Z80 z80, AddressBusProvider ula);
 	
 	/**
 	 * Writes the snapshot to default processor configuration,
