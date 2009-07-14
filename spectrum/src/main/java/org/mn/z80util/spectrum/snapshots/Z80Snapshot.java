@@ -1,9 +1,11 @@
 package org.mn.z80util.spectrum.snapshots;
 
 import java.io.*;
+import javax.swing.*;
 
 import org.apache.log4j.*;
-import org.mn.z80util.disassembler.Hex;
+
+import org.mn.z80util.disassembler.*;
 import org.mn.z80util.z80.*;
 
 public class Z80Snapshot extends AbstractSpectrumSnapshot {
@@ -72,49 +74,44 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 	 * @param hasEndSignature	true if end signature 00 ED ED 00 is expected
 	 */
 	private void loadCompressedBlock(InputStream is, int startAddr,
-			int length, boolean hasEndSignature) throws IOException
-	{
+			int length, boolean hasEndSignature) throws IOException {
 		int j, p, end, times, ch;
 		boolean last_ed;
-		
-	    p = startAddr;
-	    end = startAddr+length;
-	    last_ed = false;
 
-	    while(p < end) {
-	    	ch=is.read();
+		p = startAddr;
+		end = startAddr+length;
+		last_ed = false;
 
-	        if(ch != 0xED) {
-	            last_ed = false;
-	            memory[p++] = (byte)ch;
-	        }
-	        else {
-	            if(last_ed) {
-	                last_ed = false;
-	                p--;
-	                times=is.read();
-	                if(times == 0) break;
-	                ch=is.read();
-	                if(p + times > end) {
-	                    LOG.warn("Repeat parameter too large in snapshot.");
-	                    times = (int) ((long) end - (long) p);
-	                }
-	                for(j = 0; j < times; j++) memory[p++] = (byte)ch;
-	            }
-	            else {
-	                last_ed = true;
-	                memory[p++] = (byte)0xED;
-	            }
-	        }
-	    }
+		while(p < end) {
+			ch=is.read();
 
-	    if(hasEndSignature) {
-	    	byte[] supposed_ending=new byte[4];
-	    	is.read(supposed_ending);
-	        if(supposed_ending[0] != 0 || supposed_ending[1] != 0xED ||
-	           supposed_ending[2] != 0xED || supposed_ending[3] != 0)
-	            LOG.warn("Illegal ending of snapshot.");
-	    }
+			if(ch != 0xED) {
+				last_ed = false;
+				memory[p++] = (byte)ch;
+			} else if(last_ed) {
+				last_ed = false;
+				p--;
+				times=is.read();
+				if(times == 0) break;
+				ch=is.read();
+				if(p + times > end) {
+					LOG.warn("Repeat parameter too large in snapshot.");
+					times = (int) ((long) end - (long) p);
+				}
+				for(j = 0; j < times; j++) memory[p++] = (byte)ch;
+			} else {
+				last_ed = true;
+				memory[p++] = (byte)0xED;
+			}
+		}
+
+		if(hasEndSignature) {
+			byte[] supposed_ending=new byte[4];
+			is.read(supposed_ending);
+			if(supposed_ending[0] != 0 || supposed_ending[1] != 0xED ||
+					supposed_ending[2] != 0xED || supposed_ending[3] != 0)
+				LOG.warn("Illegal ending of snapshot.");
+		}
 	}
 	
 	private void loadZ80Version2(InputStream is) {
@@ -173,6 +170,14 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 	}
 
 	public void read(InputStream is) {
+
+		if(SwingUtilities.isEventDispatchThread()) {
+			LOG.fatal("\n  Attempted to load Z80 snapshot from event dispatch thread.\n" +
+					"This is not allowed because it is a possibly time-consuming task\n" +
+					"and not thread safe with main emulator loop thread.");
+			System.exit(1);
+		}
+		
 		byte[] v1_header=new byte[30];
 		try {
 			is.read(v1_header);
