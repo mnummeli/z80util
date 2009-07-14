@@ -20,7 +20,7 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 		try {
 			read(new FileInputStream(filename));
 		} catch (FileNotFoundException e) {
-			LOG.warn("SNA snapshot file "+filename+" not found.");
+			LOG.warn("Z80 snapshot file "+filename+" not found.");
 		}
 	}
 	
@@ -62,10 +62,59 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 								((v1_header[28] & 1) << 1) |	// IFF2
 								((v1_header[29] & 3) << 2));	// IM
 	}
-	
+
+	/**
+	 * Ported from Szeredi Miklos' Spectemu.
+	 * 
+	 * @param is				Input stream where data is read
+	 * @param startAddr			Start address of target memory area
+	 * @param length			Length of target memory area
+	 * @param hasEndSignature	true if end signature 00 ED ED 00 is expected
+	 */
 	private void loadCompressedBlock(InputStream is, int startAddr,
-			int length, boolean hasEndSignature) {
-		// TODO: implement or export this routine from somewhere.
+			int length, boolean hasEndSignature) throws IOException
+	{
+		int j, p, end, times, ch;
+		boolean last_ed;
+		
+	    p = startAddr;
+	    end = startAddr+length;
+	    last_ed = false;
+
+	    while(p < end) {
+	    	ch=is.read();
+
+	        if(ch != 0xED) {
+	            last_ed = false;
+	            memory[p++] = (byte)ch;
+	        }
+	        else {
+	            if(last_ed) {
+	                last_ed = false;
+	                p--;
+	                times=is.read();
+	                if(times == 0) break;
+	                ch=is.read();
+	                if(p + times > end) {
+	                    LOG.warn("Repeat parameter too large in snapshot.");
+	                    times = (int) ((long) end - (long) p);
+	                }
+	                for(j = 0; j < times; j++) memory[p++] = (byte)ch;
+	            }
+	            else {
+	                last_ed = true;
+	                memory[p++] = (byte)0xED;
+	            }
+	        }
+	    }
+
+	    if(hasEndSignature) {
+	    	byte[] supposed_ending=new byte[4];
+	    	is.read(supposed_ending);
+	        if(supposed_ending[0] != 0 || supposed_ending[1] != 0xED ||
+	           supposed_ending[2] != 0xED || supposed_ending[3] != 0)
+	            LOG.warn("Illegal ending of snapshot.");
+	    }
 	}
 	
 	private void loadZ80Version2(InputStream is) {
@@ -112,7 +161,13 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 				}
 			} else {
 				LOG.info("Compressed block.");
-				loadCompressedBlock(is,startAddr,0x4000,false);
+				try {
+					loadCompressedBlock(is, startAddr, 0x4000, false);
+				} catch (IOException e) {
+					LOG.error("Unable to read Z80 V2 compressed block.");
+					e.printStackTrace();
+					System.exit(1);
+				}
 			}
 		}
 	}
@@ -149,7 +204,7 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 			}
 			regs[Z80.PCL]=v23_header[0];
 			regs[Z80.PCH]=v23_header[1];
-			// load compressed z80 file pages
+			loadZ80Version2(is);
 		} else {
 			LOG.info("Z80 file is of V1 format.");
 			if(!isCompressed) {
@@ -163,7 +218,13 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 				}
 			} else {
 				LOG.info("Z80 file is compressed.");
-				loadCompressedBlock(is,0x4000,0xc000,true);
+				try {
+					loadCompressedBlock(is, 0x4000, 0xc000, true);
+				} catch (IOException e) {
+					LOG.error("Unable to read compressed Z80 snapshot memory contents.");
+					e.printStackTrace();
+					System.exit(1);
+				}
 			}
 		}
 	}
