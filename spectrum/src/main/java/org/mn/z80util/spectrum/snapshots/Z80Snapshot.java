@@ -81,6 +81,9 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 		p = startAddr;
 		end = startAddr+length;
 		last_ed = false;
+		
+		LOG.info("Compressed block start address is: "+Hex.intToHex4(p));
+		LOG.info("Compressed block end address is: "+Hex.intToHex4(end));
 
 		while(p < end) {
 			ch=is.read();
@@ -104,13 +107,22 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 				memory[p++] = (byte)0xED;
 			}
 		}
+		
+		LOG.info("Memory write pointer has reached value: "+Hex.intToHex4(p));
 
 		if(hasEndSignature) {
 			byte[] supposed_ending=new byte[4];
 			is.read(supposed_ending);
-			if(supposed_ending[0] != 0 || supposed_ending[1] != 0xED ||
-					supposed_ending[2] != 0xED || supposed_ending[3] != 0)
+			if(supposed_ending[0] != (byte) 0 ||
+					supposed_ending[1] != (byte) 0xED ||
+					supposed_ending[2] != (byte) 0xED ||
+					supposed_ending[3] != (byte) 0) {
 				LOG.warn("Illegal ending of snapshot.");
+				LOG.warn("Got [0]="+Hex.intToHex2(supposed_ending[0])+
+						", [1]="+Hex.intToHex2(supposed_ending[1])+
+						", [2]="+Hex.intToHex2(supposed_ending[2])+
+						", [3]="+Hex.intToHex2(supposed_ending[3]));
+			}
 		}
 	}
 	
@@ -187,7 +199,7 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 			System.exit(1);
 		}
 		setV1RegisterValues(v1_header);
-		if((regs[Z80.PC]==0) && (regs[Z80.PC+1]==0)) {
+		if((regs[Z80.PCL]==(byte)0) && (regs[Z80.PCH]==(byte)0)) {
 			isVersion2=true;
 			LOG.info("Z80 file is of V2 format.");
 			byte[] lenbytes=new byte[2];

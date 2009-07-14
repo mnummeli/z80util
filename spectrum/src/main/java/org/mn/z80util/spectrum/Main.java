@@ -40,9 +40,62 @@ public class Main {
 	private static Logger LOG=Logger.getLogger(Main.class);
 	private static String[] args;
 	
+	private static SpectrumZ80Clock clock;
+	private static SpectrumScreen scr;
+	private static SpectrumControls controller;
+	
 	public static void main( String[] args ) {
 		System.out.println(COPYRIGHT_NOTICE);
 		Main.args=args;
+
+		/* Creates basic components */
+		Z80 z80                 = new YazeBasedZ80Impl();
+		// Z80 z80				= new QaopZ80Impl();
+		SpectrumULA ula         = new SpectrumULA();
+		clock  					= new SpectrumZ80Clock();
+		scr  					= new SpectrumScreen();
+		controller 				= new SpectrumControls();
+
+		/* Wires the components together */
+		z80.setUla(ula);
+		ula.setScreen(scr);
+		clock.setZ80(z80);
+		clock.setUla(ula);
+		scr.setUla(ula);
+		controller.setUla(ula);
+		controller.setZ80(z80);
+		controller.setClock(clock);
+				
+		/* Resets ULA and Z80 processor */
+		ula.reset();
+		z80.reset();
+				
+		/* Parses arguments and loads appropriate ROM and snapshots */
+		LOG.info("Parsing the arguments");
+		String ROMFileName="48.rom", Z80FileName=null, SNAFileName=null;
+		for(int i=0;i<Main.args.length;i++) {
+			LOG.info("Argument type: "+Main.args[i]);
+			if(Main.args[i].equals("-rom")) {
+				ROMFileName=Main.args[++i];
+				LOG.info("ROM file name: "+ROMFileName);
+			} else if(Main.args[i].equals("-z80")) {
+				Z80FileName=Main.args[++i];
+				LOG.info("Z80 file name: "+Z80FileName);
+			} else if(Main.args[i].equals("-sna")) {
+				SNAFileName=Main.args[++i];
+				LOG.info("SNA file name: "+SNAFileName);
+			}
+		}
+		ula.loadROM(Main.class.getResourceAsStream("/"+ROMFileName));
+		if(Z80FileName!=null) {
+			AbstractSpectrumSnapshot snsh=
+				new Z80Snapshot(Z80FileName);
+			snsh.write(z80,ula);
+		} else if(SNAFileName!=null) {
+			AbstractSpectrumSnapshot snsh=
+				new SNASnapshot(SNAFileName);
+			snsh.write(z80,ula);
+		}
 
 		SwingUtilities.invokeLater(new Runnable() {
 
@@ -50,61 +103,11 @@ public class Main {
 			 * Creates the GUI in the event dispatching thread as recommended
 			 * by Sun.
 			 */
-			public void run() {
-				
-				/* Creates basic components */
-				Z80 z80                 = new YazeBasedZ80Impl();
-				// Z80 z80				= new QaopZ80Impl();
-				SpectrumULA ula         = new SpectrumULA();
-				SpectrumZ80Clock clock  = new SpectrumZ80Clock();
-				SpectrumScreen scr  = new SpectrumScreen();
-				SpectrumControls controller = new SpectrumControls();
-				
-				/* Wires the components together */
-				z80.setUla(ula);
-				ula.setScreen(scr);
-				clock.setZ80(z80);
-				clock.setUla(ula);
-				scr.setUla(ula);
-				controller.setUla(ula);
-				controller.setZ80(z80);
-				controller.setClock(clock);
-				
-				/* Resets ULA and Z80 processor */
-				ula.reset();
-				z80.reset();
-				
-				/* Parses arguments and loads appropriate ROM and snapshots */
-				LOG.info("Parsing the arguments");
-				String ROMFileName="48.rom", Z80FileName=null, SNAFileName=null;
-				for(int i=0;i<Main.args.length;i++) {
-					LOG.info("Argument type: "+Main.args[i]);
-					if(Main.args[i].equals("-rom")) {
-						ROMFileName=Main.args[++i];
-						LOG.info("ROM file name: "+ROMFileName);
-					} else if(Main.args[i].equals("-z80")) {
-						Z80FileName=Main.args[++i];
-						LOG.info("Z80 file name: "+Z80FileName);
-					} else if(Main.args[i].equals("-sna")) {
-						SNAFileName=Main.args[++i];
-						LOG.info("SNA file name: "+SNAFileName);
-					}
-				}
-				ula.loadROM(Main.class.getResourceAsStream("/"+ROMFileName));
-				if(Z80FileName!=null) {
-					AbstractSpectrumSnapshot snsh=
-						new Z80Snapshot(Z80FileName);
-					snsh.write(z80,ula);
-				} else if(SNAFileName!=null) {
-					AbstractSpectrumSnapshot snsh=
-						new SNASnapshot(SNAFileName);
-					snsh.write(z80,ula);
-				}
-				
+			public void run() {		
 				new GUI(controller, scr);
-				
+
 				/* Starts the machine */
-				new Thread(clock,"Spectrum").start();
+				new Thread(clock, "Spectrum").start();
 			}
 		});
     }

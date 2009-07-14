@@ -73,12 +73,15 @@ public class SpectrumScreen extends JPanel {
 	 * area and colors.
 	 */
 	public SpectrumScreen() {
-		setPreferredSize(new Dimension(SCALE*WIDTH, SCALE*HEIGHT));
 		paperStripe=new BufferedImage(SCALE*PAPER_WIDTH, SCALE,
 				BufferedImage.TYPE_INT_RGB);
 		for(int i=0;i<16;i++) {
 			spectrumColors[i]=new Color(spectrumColorsRGB[i]);
 		}
+	}
+	
+	public Dimension getPreferredSize() {
+		return new Dimension(SCALE*WIDTH, SCALE*HEIGHT);
 	}
 	
 	private void setPixel(int x, int colorno) {
