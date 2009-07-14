@@ -4,10 +4,9 @@ import java.io.*;
 import javax.swing.*;
 
 import org.apache.log4j.*;
-
-import org.mn.z80util.disassembler.*;
 import org.mn.z80util.z80.*;
 import org.mn.z80util.spectrum.*;
+import org.mn.z80util.disassembler.*;
 
 public class Z80Snapshot extends AbstractSpectrumSnapshot {
 	private Logger LOG=Logger.getLogger(Z80Snapshot.class);
@@ -190,7 +189,7 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 
 		if(SwingUtilities.isEventDispatchThread()) {
 			LOG.fatal("\n  Attempted to load Z80 snapshot from event dispatch thread.\n" +
-					"This is not allowed because it is a possibly time-consuming task\n" +
+					"This is not allowed, because it is a possibly time-consuming task\n" +
 					"and not thread safe with main emulator loop thread.");
 			System.exit(1);
 		}
@@ -252,6 +251,6 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 	}
 
 	public void write(OutputStream os) {
-
+		// TODO
 	}
 }
