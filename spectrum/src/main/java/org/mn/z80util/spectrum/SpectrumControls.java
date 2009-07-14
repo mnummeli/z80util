@@ -252,12 +252,17 @@ private Logger LOG=Logger.getLogger(SpectrumControls.class);
 		    	try {
 		    		File f=chooser.getSelectedFile();
 		    		String ftype=Snapshots.fileType(f.getName());
+		    		
+		    		/*
+		    		 * The actual snapshot loading will take place in the main
+		    		 * thread (SpectrumZ80Clock), not here in event dispatch thread.
+		    		 */
 		    		if(ftype.equals("z80")) {
-		    			LOG.info("Loading Z80 file "+f.getName());
-		    			Snapshots.loadZ80(new FileInputStream(f),z80,ula);
+		    			clock.setSnapshotImportFileType(SpectrumZ80Clock.Z80_FILE);
+		    			clock.setSnapshotImportFile(new FileInputStream(f));
 		    		} else if(ftype.equals("sna")) {
-		    			LOG.info("Loading SNA file "+f.getName());
-		    			Snapshots.loadSNA(new FileInputStream(f),z80,ula);
+		    			clock.setSnapshotImportFileType(SpectrumZ80Clock.SNA_FILE);
+		    			clock.setSnapshotImportFile(new FileInputStream(f));
 		    		}
 				} catch (FileNotFoundException fnfe) {
 					LOG.warn("Unable to open selected file");

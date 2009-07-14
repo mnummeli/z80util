@@ -21,9 +21,12 @@
 
 package org.mn.z80util.spectrum;
 
+import java.io.*;
+
 import org.apache.log4j.*;
 import org.mn.z80util.disassembler.*;
 import org.mn.z80util.z80.*;
+import org.mn.z80util.spectrum.snapshots.*;
 
 public class SpectrumZ80Clock implements Runnable {
     private static Logger LOG=Logger.getLogger(SpectrumZ80Clock.class);
@@ -31,6 +34,37 @@ public class SpectrumZ80Clock implements Runnable {
     private int interrupts, screenLine;
     private long startTime;
     private boolean approveUpdate;
+
+    /*
+     * Snapshot file types, flags and functions. These affect the processor
+     * loop so that if snapshotImport/Export file types are nonzero, they
+     * force loading or saving a snapshot before executing next command.
+     */
+    public static final int NONE=0;
+    public static final int Z80_FILE=1;
+    public static final int SNA_FILE=2;
+    
+    private volatile int snapshotImportFileType=NONE;
+    private volatile InputStream snapshotImportFile;
+    
+    public void setSnapshotImportFileType(int filetype) {
+    	snapshotImportFileType=filetype;
+    }
+    
+    public void setSnapshotImportFile(InputStream snapshotImportFile) {
+    	this.snapshotImportFile=snapshotImportFile;
+    }
+    
+    private volatile int snapshotExportFileType=NONE;
+    private volatile OutputStream snapshotExportFile;
+    
+    public void setSnapshotExportFileType(int filetype) {
+    	snapshotExportFileType=filetype;
+    }
+    
+    public void setSnapshotExportFile(OutputStream snapshotExportFile) {
+    	this.snapshotExportFile=snapshotExportFile;
+    }
 
     private SpectrumULA ula;
     public void setUla(SpectrumULA ula) {
@@ -77,8 +111,31 @@ public class SpectrumZ80Clock implements Runnable {
             LOG.debug(cmdString);
     	}
 
-    	while(paused) {
-            synchronized(this) {
+    	while(true) {
+    		
+    		/*
+    		 * The snapshot handling routine is passed through in both normal
+    		 * processor cycle AND when paused/in stepping mode. In pause mode
+    		 * it nevertheless requires an appropriate notifyAll().
+    		 */
+    		if(snapshotImportFileType!=NONE) {
+    			/* Snapshot load */
+    			AbstractSpectrumSnapshot snsh=
+    				new Z80Snapshot(snapshotImportFile);
+    			snsh.write(z80, ula);
+    			ula.markScreenDirty();
+    			snapshotImportFileType=NONE;
+    		} else if(snapshotExportFileType!=NONE) {
+    			/* Snapshot save */
+    			ula.markScreenDirty();
+    			snapshotExportFileType=NONE;
+    		}
+    		
+    		if(!paused) {
+    			break;
+    		}
+    		
+    		synchronized(this) {
                 try {
                     wait();
                     ula.markScreenDirty();
@@ -86,7 +143,8 @@ public class SpectrumZ80Clock implements Runnable {
                     /* Do nothing */
                 }
             }
-        }
+    	}
+
     	z80.executeNextCommand();
     }
     
