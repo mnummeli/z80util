@@ -97,6 +97,43 @@ public class SpectrumZ80Clock implements Runnable {
     /* Processor loop routines */
     
     /**
+	 * The snapshot handling routine is passed through in both normal
+	 * processor cycle AND when paused/in stepping mode. In pause mode
+	 * it nevertheless requires an appropriate notifyAll().
+	 */
+    private void snapshotTrap() {
+		if(snapshotImportFileType!=NONE) {
+			/* Snapshot load */
+			AbstractSpectrumSnapshot snsh=null;
+			switch(snapshotImportFileType) {
+			case Z80_FILE:
+				snsh=new Z80Snapshot(snapshotImportFile);
+				break;
+			case SNA_FILE:
+				snsh=new SNASnapshot(snapshotImportFile);
+				break;
+			}
+			snsh.write(z80, ula);
+			ula.markScreenDirty();
+			snapshotImportFileType=NONE;
+		} else if(snapshotExportFileType!=NONE) {
+			/* Snapshot save */
+			AbstractSpectrumSnapshot snsh=null;
+			switch(snapshotExportFileType) {
+			case Z80_FILE:
+				snsh=new Z80Snapshot(z80, ula);
+				break;
+			case SNA_FILE:
+				snsh=new SNASnapshot(z80, ula);
+				break;
+			}
+			snsh.write(snapshotExportFile);
+			ula.markScreenDirty();
+			snapshotExportFileType=NONE;
+		}
+    }
+    
+    /**
      * A single processor step. Should be as fast as possible if not
      * in stepping mode.
      */
@@ -107,42 +144,25 @@ public class SpectrumZ80Clock implements Runnable {
     		short pc=z80.getRegPair(Z80.PC);
     		DisasmResult dar=Disassembler.disassemble(memory,pc);
     		String cmdString=Hex.intToHex4(pc & 0xffff)+" "+dar.getHexDigits()+
-    			dar.getCommand();
-            LOG.debug(cmdString);
+    		dar.getCommand();
+    		LOG.debug(cmdString);
     	}
 
     	while(true) {
-    		
-    		/*
-    		 * The snapshot handling routine is passed through in both normal
-    		 * processor cycle AND when paused/in stepping mode. In pause mode
-    		 * it nevertheless requires an appropriate notifyAll().
-    		 */
-    		if(snapshotImportFileType!=NONE) {
-    			/* Snapshot load */
-    			AbstractSpectrumSnapshot snsh=
-    				new Z80Snapshot(snapshotImportFile);
-    			snsh.write(z80, ula);
-    			ula.markScreenDirty();
-    			snapshotImportFileType=NONE;
-    		} else if(snapshotExportFileType!=NONE) {
-    			/* Snapshot save */
-    			ula.markScreenDirty();
-    			snapshotExportFileType=NONE;
-    		}
-    		
-    		if(!paused) {
-    			break;
-    		}
-    		
     		synchronized(this) {
-                try {
-                    wait();
-                    ula.markScreenDirty();
-                } catch (InterruptedException e) {
-                    /* Do nothing */
-                }
-            }
+    			snapshotTrap();
+
+    			if(!paused) {
+    				break;
+    			}
+
+    			try {
+    				wait();
+    				ula.markScreenDirty();
+    			} catch (InterruptedException e) {
+    				/* Do nothing */
+    			}
+    		}
     	}
 
     	z80.executeNextCommand();

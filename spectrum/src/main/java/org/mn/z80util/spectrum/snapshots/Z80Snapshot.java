@@ -7,6 +7,7 @@ import org.apache.log4j.*;
 
 import org.mn.z80util.disassembler.*;
 import org.mn.z80util.z80.*;
+import org.mn.z80util.spectrum.*;
 
 public class Z80Snapshot extends AbstractSpectrumSnapshot {
 	private Logger LOG=Logger.getLogger(Z80Snapshot.class);
@@ -24,6 +25,10 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 		} catch (FileNotFoundException e) {
 			LOG.warn("Z80 snapshot file "+filename+" not found.");
 		}
+	}
+	
+	public Z80Snapshot(Z80 z80, SpectrumULA ula) {
+		super(z80,ula);
 	}
 	
 	public void setV1RegisterValues(byte[] v1_header) {
