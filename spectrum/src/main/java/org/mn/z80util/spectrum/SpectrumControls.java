@@ -227,7 +227,6 @@ private Logger LOG=Logger.getLogger(SpectrumControls.class);
 				}
 			}
 			break;
-		case KeyEvent.VK_ESCAPE:
 		case KeyEvent.VK_F10:
 			System.exit(0);
 		case KeyEvent.VK_BACK_SPACE:
