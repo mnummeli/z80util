@@ -276,11 +276,11 @@ private Logger LOG=Logger.getLogger(SpectrumControls.class);
 		    		File f=chooser.getSelectedFile();
 		    		String ftype=Snapshots.fileType(f.getName());
 		    		if(ftype.equals("z80")) {
-		    			LOG.info("Saving Z80 file "+f.getName());
-		    			Snapshots.saveZ80(new FileOutputStream(f),z80,ula);
+		    			clock.setSnapshotExportFileType(SpectrumZ80Clock.Z80_FILE);
+		    			clock.setSnapshotExportFile(new FileOutputStream(f));
 		    		} else if(ftype.equals("sna")) {
-		    			LOG.info("Saving SNA file "+f.getName());
-		    			Snapshots.saveSNA(new FileOutputStream(f),z80,ula);
+		    			clock.setSnapshotExportFileType(SpectrumZ80Clock.SNA_FILE);
+		    			clock.setSnapshotExportFile(new FileOutputStream(f));
 		    		} else {
 		    			LOG.warn("Attempted to save into unknown file type "+ftype+".");
 		    		}

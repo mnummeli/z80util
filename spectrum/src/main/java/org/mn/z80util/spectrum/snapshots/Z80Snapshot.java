@@ -11,6 +11,7 @@ import org.mn.z80util.disassembler.*;
 public class Z80Snapshot extends AbstractSpectrumSnapshot {
 	private Logger LOG=Logger.getLogger(Z80Snapshot.class);
 	private boolean isCompressed=false, isVersion2=false;
+	private int memptr;
 	
 	public Z80Snapshot(InputStream is) {
 		super();
@@ -67,6 +68,41 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 		regs[Z80.IM_IFF]=(byte)((v1_header[27] & 1) |			// IFF1
 								((v1_header[28] & 1) << 1) |	// IFF2
 								((v1_header[29] & 3) << 2));	// IM
+	}
+	
+	public void getV1RegisterValues(byte[] v1_header) {
+		int IS_COMPRESSED = 0x20;
+		v1_header[0]=regs[Z80.A];
+		v1_header[1]=regs[Z80.F];
+		v1_header[2]=regs[Z80.C];
+		v1_header[3]=regs[Z80.B];
+		v1_header[4]=regs[Z80.L];
+		v1_header[5]=regs[Z80.H];
+		v1_header[6]=regs[Z80.PCL];
+		v1_header[7]=regs[Z80.PCH];
+		v1_header[8]=regs[Z80.SPL];
+		v1_header[9]=regs[Z80.SPH];
+		v1_header[10]=regs[Z80.I];
+		v1_header[11]=(byte)(regs[Z80.R] & 0x7f);
+		v1_header[12]=(byte)(IS_COMPRESSED | ((border & 7) << 1) |
+				((regs[Z80.R] & 0x80) >> 7));
+		v1_header[13]=regs[Z80.E];
+		v1_header[14]=regs[Z80.D];
+		v1_header[15]=regs[Z80.C_ALT];
+		v1_header[16]=regs[Z80.B_ALT];
+		v1_header[17]=regs[Z80.E_ALT];
+		v1_header[18]=regs[Z80.D_ALT];
+		v1_header[19]=regs[Z80.L_ALT];
+		v1_header[20]=regs[Z80.H_ALT];
+		v1_header[21]=regs[Z80.A_ALT];
+		v1_header[22]=regs[Z80.F_ALT];
+		v1_header[23]=regs[Z80.YL];
+		v1_header[24]=regs[Z80.YH];
+		v1_header[25]=regs[Z80.XL];
+		v1_header[26]=regs[Z80.XH];
+		v1_header[27]=(byte)(regs[Z80.IM_IFF] & 1);
+		v1_header[28]=(byte)((regs[Z80.IM_IFF] & 2) >> 1);
+		v1_header[29]=(byte)((regs[Z80.IM_IFF] & 0xc) >> 2);
 	}
 
 	/**
@@ -250,7 +286,100 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 		}
 	}
 
+	/**
+	 * Ported from Szeredi Miklos' Spectemu.
+	 * 
+	 * @return	Next byte from memory, -1 if overlapping above FFFFh.
+	 */
+	private int compr_read_byte() {
+	    if(memptr < 0x10000) {
+	    	return (memory[memptr++] & 0xff);
+	    } else {
+	    	return -1;
+	    }
+	}
+	
+	/**
+	 * Ported from Szeredi Miklos' Spectemu.
+	 * 
+	 * @param os				Output stream where data is written to
+	 * @param startAddr			Start address of target memory area
+	 * @param length			Length of target memory area
+	 */
+	private void saveCompressedBlock(OutputStream os, int startAddr, int length)
+		throws IOException {
+	    int j, c, lc, num;
+	    boolean lled,rep;
+
+	    memptr=startAddr;
+	    rep = false;
+	  
+	    c = compr_read_byte();
+	    lc = 0;
+	    num = 0;
+
+	    while(c >= 0) {
+	        if(lc == 0xED) lled = true;
+	        else lled = false;
+
+	        lc = c;
+	        c = compr_read_byte();
+	        if(c == lc && num != 255 && (!lled || rep)) {
+	            if(!rep) {
+	                num = 1;
+	                rep = true;
+	            }
+	            num++;
+	        }
+	        else {
+	            if(rep) {
+	                if(num < 5 && lc != 0xED) for(j = 0; j < num; j++)
+	                	os.write(lc);
+	                else{
+	                	os.write(0xED);
+	                	os.write(0xED);
+	                	os.write(num);
+	                	os.write(lc);
+	                    num = 0;
+	                }
+	                rep = false;
+	            }
+	            else os.write(lc);
+	        }
+	    }
+
+	    os.write(0x00);
+	    os.write(0xED);
+	    os.write(0xED);
+	    os.write(0x00);
+	}
+
 	public void write(OutputStream os) {
-		// TODO
+		if(SwingUtilities.isEventDispatchThread()) {
+			LOG.fatal("\n  Attempted to save Z80 snapshot from event dispatch thread.\n" +
+					"This is not allowed, because it is a possibly time-consuming task\n" +
+					"and not thread safe with main emulator loop thread.");
+			System.exit(1);
+		}
+		
+		LOG.info("Saving compressed Z80 V1 file.");
+		byte[] v1_header=new byte[30];
+		getV1RegisterValues(v1_header);
+		try {
+			os.write(v1_header);
+		} catch (Exception e) {
+			LOG.error("Unable to write Z80 V1 header.");
+			e.printStackTrace();
+			System.exit(1);
+		}
+		LOG.info("Header information written, header length was "+v1_header.length);
+		LOG.info("Saving compressed Z80 V1 file memory contents.");
+		try {
+			saveCompressedBlock(os, 0x4000, 0xc000);
+		} catch (IOException e) {
+			LOG.error("Unable to save compressed Z80 V1 snapshot.");
+			e.printStackTrace();
+			System.exit(1);
+		}
 	}
 }
