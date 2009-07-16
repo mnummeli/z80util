@@ -32,12 +32,23 @@ import org.mn.z80util.*;
 public class SpectrumGUI {
 	Logger LOG=Logger.getLogger(SpectrumGUI.class);
 	
-	/* The GUI components */
-	private JFrame GUIFrame, debuggerFrame;
-	private JMenuBar GUIFrameMenuBar, debuggerFrameMenuBar;
+	/* The GUI components (main) */
+	private JFrame GUIFrame;
+	private JMenuBar GUIFrameMenuBar;
 	private JMenu fileMenu, actionMenu, viewMenu, helpMenu;
 	private JMenuItem loadItem, saveItem, exitItem, stepItem, continueItem,
 		debuggerItem, aboutItem;
+	
+	/* The GUI components (debugger) */
+	private JFrame debuggerFrame;
+	private JPanel stepControlPanel, regsPanel, switchableRegsPanel, uniqueRegsPanel,
+		assemblyListPanel, rangesPanel;
+	private JButton stepButton, continueButton;
+	private JTextField af, bc, de, hl, af_alt, bc_alt, de_alt, hl_alt,
+		ix, iy, sp, pc, ir, im_iff;
+	private JTable assemblyListTable;
+	private JLabel startLabel, endLabel;
+	private JTextField startAddr, endAddr;
 	
 	/* The event listener, which is also the main Spectrum controller for
 	 * keyboard and menu options. */
@@ -61,10 +72,16 @@ public class SpectrumGUI {
 		GUIFrame.setIconImage(LogoFactory.createLogo());
 		GUIFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
+		/* Creation of the debugger GUI frame */
+		debuggerFrame=new JFrame();
+		debuggerFrame.setTitle("Z80 disassembler/debugger - (C) 2009, Mikko Nummelin");
+		debuggerFrame.setIconImage(LogoFactory.createLogo());
+		debuggerFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+		
 		/* Menu bar */
 		GUIFrameMenuBar=new JMenuBar();
 		GUIFrame.setJMenuBar(GUIFrameMenuBar);
-
+		
 		/* File menu */
 		fileMenu=new JMenu("File");
 		loadItem=new JMenuItem("Load", KeyEvent.VK_O);
@@ -103,16 +120,54 @@ public class SpectrumGUI {
 		helpMenu.add(aboutItem);
 		GUIFrameMenuBar.add(helpMenu);
 		
-		/* Creation of the debugger GUI frame */
-		debuggerFrame=new JFrame();
-		debuggerFrame.setTitle("Z80 disassembler/debugger - (C) 2009, Mikko Nummelin");
-		debuggerFrame.setIconImage(LogoFactory.createLogo());
-		debuggerFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+		/* Debugger */
+		stepControlPanel=new JPanel();
+		stepButton=new JButton("Step");
+		stepButton.addActionListener(controller);
+		continueButton=new JButton("Continue");
+		continueButton.addActionListener(controller);
+		stepControlPanel.add(stepButton);
+		stepControlPanel.add(continueButton);
+		debuggerFrame.add(stepControlPanel);
+
+		regsPanel=new JPanel();
+		switchableRegsPanel=new JPanel(new GridLayout(4,2));
+		af=new JTextField(); af_alt=new JTextField();
+		switchableRegsPanel.add(af);
+		switchableRegsPanel.add(af_alt);
+		bc=new JTextField(); bc_alt=new JTextField();
+		switchableRegsPanel.add(bc);
+		switchableRegsPanel.add(bc_alt);
+		de=new JTextField(); de_alt=new JTextField();
+		switchableRegsPanel.add(de);
+		switchableRegsPanel.add(de_alt);
+		hl=new JTextField(); hl_alt=new JTextField();
+		switchableRegsPanel.add(hl);
+		switchableRegsPanel.add(hl_alt);
+		regsPanel.add(switchableRegsPanel);
+		
+		uniqueRegsPanel=new JPanel();
+		uniqueRegsPanel.setLayout(new GridLayout(6,1));
+		ix=new JTextField();
+		uniqueRegsPanel.add(ix);
+		iy=new JTextField();
+		uniqueRegsPanel.add(iy);
+		sp=new JTextField();
+		uniqueRegsPanel.add(sp);
+		pc=new JTextField();
+		uniqueRegsPanel.add(pc);
+		ir=new JTextField();
+		uniqueRegsPanel.add(ir);
+		im_iff=new JTextField();
+		uniqueRegsPanel.add(im_iff);
+		regsPanel.add(uniqueRegsPanel);
+		debuggerFrame.add(regsPanel);
 		
 		/* Finishing the setup and setting the main frame, but NOT debugger
 		 * frame, visible */
 		GUIFrame.add(screen);
 		controller.setParentFrame(GUIFrame);
+		controller.setDebuggerFrame(debuggerFrame);
 		GUIFrame.addKeyListener(controller);
 		GUIFrame.pack();
 		GUIFrame.setResizable(false);

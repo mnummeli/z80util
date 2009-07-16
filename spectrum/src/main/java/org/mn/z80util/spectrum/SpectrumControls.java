@@ -32,6 +32,8 @@ import org.mn.z80util.spectrum.snapshots.Snapshots;
 public class SpectrumControls implements KeyListener, ActionListener {
 private Logger LOG=Logger.getLogger(SpectrumControls.class);
 	
+	/* Dependency injection setters. */
+
 	private SpectrumULA ula;
 	public void setUla(SpectrumULA ula) {
 		this.ula=ula;
@@ -46,6 +48,11 @@ private Logger LOG=Logger.getLogger(SpectrumControls.class);
 	public void setParentFrame(JFrame parentFrame) {
 		this.parentFrame=parentFrame;
 	}
+	
+	private JFrame debuggerFrame;
+	public void setDebuggerFrame(JFrame debuggerFrame) {
+		this.debuggerFrame=debuggerFrame;
+	}
 
 	public void keyPressed(KeyEvent e) {
 		LOG.trace("Key pressed.");
@@ -57,6 +64,8 @@ private Logger LOG=Logger.getLogger(SpectrumControls.class);
 		processKeyEvent(e, false);
 	}
 
+	/* Keyboard listener */
+	
 	/**
 	 * Processes key presses and releases and sends them to the ULA.
 	 * From Spectrum configuration, note that:
@@ -235,6 +244,8 @@ private Logger LOG=Logger.getLogger(SpectrumControls.class);
 			System.exit(0);
 		case KeyEvent.VK_F11:
 			if(eventType) {
+				debuggerFrame.pack();
+				debuggerFrame.setVisible(true);
 				clock.stepMode();
 				synchronized(clock) {
 					clock.notifyAll();
@@ -255,6 +266,8 @@ private Logger LOG=Logger.getLogger(SpectrumControls.class);
 	public void keyTyped(KeyEvent e) {
 		/* Do nothing */
 	}
+	
+	/* (Menu) action listener */
 	
 	public void actionPerformed(ActionEvent e) {
 		if(e.getActionCommand().equalsIgnoreCase("Load")) {
@@ -277,12 +290,17 @@ private Logger LOG=Logger.getLogger(SpectrumControls.class);
 			synchronized(clock) {
 				clock.notifyAll();
 			}
+		} else if(e.getActionCommand().equalsIgnoreCase("Debugger")) {
+			debuggerFrame.pack();
+			debuggerFrame.setVisible(true);
 		} else if (e.getActionCommand().equalsIgnoreCase("Exit")) {
 			System.exit(0);
 		} else if (e.getActionCommand().equalsIgnoreCase("About")) {
 			showAboutMessage();
 		}
 	}
+	
+	/* Helper routines */
 	
 	private void handleLoadDialog() {
 		JFileChooser chooser = new JFileChooser();
