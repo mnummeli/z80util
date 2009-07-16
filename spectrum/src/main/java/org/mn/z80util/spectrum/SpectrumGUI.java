@@ -67,38 +67,38 @@ public class SpectrumGUI {
 
 		/* File menu */
 		fileMenu=new JMenu("File");
-		loadItem=new JMenuItem("Load", KeyEvent.VK_F3);
+		loadItem=new JMenuItem("Load", KeyEvent.VK_O);
 		loadItem.addActionListener(controller);
 		fileMenu.add(loadItem);
-		saveItem=new JMenuItem("Save", KeyEvent.VK_F2);
+		saveItem=new JMenuItem("Save", KeyEvent.VK_S);
 		saveItem.addActionListener(controller);
 		fileMenu.add(saveItem);
 		fileMenu.add(new JSeparator());
-		exitItem=new JMenuItem("Exit", KeyEvent.VK_F10);
+		exitItem=new JMenuItem("Exit", KeyEvent.VK_X);
 		exitItem.addActionListener(controller);
 		fileMenu.add(exitItem);
 		GUIFrameMenuBar.add(fileMenu);
 		
 		/* Action menu */
 		actionMenu=new JMenu("Action");
-		stepItem=new JMenuItem("Step", KeyEvent.VK_F11);
+		stepItem=new JMenuItem("Step", KeyEvent.VK_T);
 		stepItem.addActionListener(controller);
 		actionMenu.add(stepItem);
-		continueItem=new JMenuItem("Continue", KeyEvent.VK_F12);
+		continueItem=new JMenuItem("Continue", KeyEvent.VK_C);
 		continueItem.addActionListener(controller);
 		actionMenu.add(continueItem);
 		GUIFrameMenuBar.add(actionMenu);
 		
 		/* View menu */
 		viewMenu=new JMenu("View");
-		debuggerItem=new JMenuItem("Debugger", KeyEvent.VK_F8);
+		debuggerItem=new JMenuItem("Debugger", KeyEvent.VK_D);
 		debuggerItem.addActionListener(controller);
 		viewMenu.add(debuggerItem);
 		GUIFrameMenuBar.add(viewMenu);
 		
 		/* Help menu */
 		helpMenu=new JMenu("Help");
-		aboutItem=new JMenuItem("Help", KeyEvent.VK_F1);
+		aboutItem=new JMenuItem("About", KeyEvent.VK_A);
 		aboutItem.addActionListener(controller);
 		helpMenu.add(aboutItem);
 		GUIFrameMenuBar.add(helpMenu);
@@ -112,6 +112,7 @@ public class SpectrumGUI {
 		/* Finishing the setup and setting the main frame, but NOT debugger
 		 * frame, visible */
 		GUIFrame.add(screen);
+		controller.setParentFrame(GUIFrame);
 		GUIFrame.addKeyListener(controller);
 		GUIFrame.pack();
 		GUIFrame.setResizable(false);

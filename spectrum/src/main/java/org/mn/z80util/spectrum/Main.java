@@ -43,6 +43,7 @@ public class Main {
 	private static SpectrumZ80Clock clock;
 	private static SpectrumScreen scr;
 	private static SpectrumControls controller;
+	private static SpectrumGUI spectrumGUI;
 	
 	public static void main( String[] args ) {
 		System.out.println(COPYRIGHT_NOTICE);
@@ -55,6 +56,7 @@ public class Main {
 		clock  					= new SpectrumZ80Clock();
 		scr  					= new SpectrumScreen();
 		controller 				= new SpectrumControls();
+		spectrumGUI				= new SpectrumGUI();
 
 		/* Wires the components together */
 		z80.setUla(ula);
@@ -63,8 +65,9 @@ public class Main {
 		clock.setUla(ula);
 		scr.setUla(ula);
 		controller.setUla(ula);
-		controller.setZ80(z80);
 		controller.setClock(clock);
+		spectrumGUI.setScreen(scr);
+		spectrumGUI.setController(controller);
 				
 		/* Resets ULA and Z80 processor */
 		ula.reset();
@@ -103,8 +106,9 @@ public class Main {
 			 * Creates the GUI in the event dispatching thread as recommended
 			 * by Sun.
 			 */
-			public void run() {		
-				new GUI(controller, scr);
+			public void run() {
+				// new GUI(controller, scr);
+				spectrumGUI.createAndShowGUI();
 
 				/* Starts the machine */
 				new Thread(clock, "Spectrum").start();

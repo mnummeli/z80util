@@ -23,12 +23,11 @@ package org.mn.z80util.spectrum;
 
 import java.awt.event.*;
 import java.io.*;
-import javax.swing.JFileChooser;
+import javax.swing.*;
 
 import org.apache.log4j.*;
 
 import org.mn.z80util.spectrum.snapshots.Snapshots;
-import org.mn.z80util.z80.*;
 
 public class SpectrumControls implements KeyListener, ActionListener {
 private Logger LOG=Logger.getLogger(SpectrumControls.class);
@@ -43,9 +42,9 @@ private Logger LOG=Logger.getLogger(SpectrumControls.class);
 		this.clock=clock;
 	}
 	
-	private Z80 z80;
-	public void setZ80(Z80 z80) {
-		this.z80=z80;
+	private JFrame parentFrame;
+	public void setParentFrame(JFrame parentFrame) {
+		this.parentFrame=parentFrame;
 	}
 
 	public void keyPressed(KeyEvent e) {
@@ -203,23 +202,28 @@ private Logger LOG=Logger.getLogger(SpectrumControls.class);
 		case KeyEvent.VK_B:
 			ula.setKeyData(7,4,eventType);
 			break;
+		case KeyEvent.VK_BACK_SPACE:
+			ula.setKeyData(0,0,eventType);	// ERASE
+			ula.setKeyData(4,0,eventType);
+			break;
+			
+		/* Function keys */
 		case KeyEvent.VK_F1:
-			if(eventType) {
-				clock.stepMode();
-				synchronized(clock) {
-					clock.notifyAll();
-				}
-			}
+			showAboutMessage();
 			break;
 		case KeyEvent.VK_F2:
-			if(eventType) {
-				clock.runMode();
-				synchronized(clock) {
-					clock.notifyAll();
-				}
+			handleSaveDialog();
+			synchronized(clock) {
+				clock.notifyAll();
 			}
 			break;
 		case KeyEvent.VK_F3:
+			handleLoadDialog();
+			synchronized(clock) {
+				clock.notifyAll();
+			}
+			break;
+		case KeyEvent.VK_F5:
 			if(eventType) {
 				clock.reset();
 				synchronized(clock) {
@@ -229,9 +233,21 @@ private Logger LOG=Logger.getLogger(SpectrumControls.class);
 			break;
 		case KeyEvent.VK_F10:
 			System.exit(0);
-		case KeyEvent.VK_BACK_SPACE:
-			ula.setKeyData(0,0,eventType);	// ERASE
-			ula.setKeyData(4,0,eventType);
+		case KeyEvent.VK_F11:
+			if(eventType) {
+				clock.stepMode();
+				synchronized(clock) {
+					clock.notifyAll();
+				}
+			}
+			break;
+		case KeyEvent.VK_F12:
+			if(eventType) {
+				clock.runMode();
+				synchronized(clock) {
+					clock.notifyAll();
+				}
+			}
 			break;
 		}
 	}
@@ -240,55 +256,86 @@ private Logger LOG=Logger.getLogger(SpectrumControls.class);
 		/* Do nothing */
 	}
 	
-	/*
-	 * TODO: Snapshot handling MUST be taken out from event dispatch thread!
-	 */
 	public void actionPerformed(ActionEvent e) {
-		if(e.getActionCommand().equalsIgnoreCase("Open")) {
-			JFileChooser chooser = new JFileChooser();
-		    int returnVal = chooser.showOpenDialog(null);
-		    if(returnVal == JFileChooser.APPROVE_OPTION) {
-		    	try {
-		    		File f=chooser.getSelectedFile();
-		    		String ftype=Snapshots.fileType(f.getName());
-		    		
-		    		/*
-		    		 * The actual snapshot loading will take place in the main
-		    		 * thread (SpectrumZ80Clock), not here in event dispatch thread.
-		    		 */
-		    		if(ftype.equals("z80")) {
-		    			clock.setSnapshotImportFileType(SpectrumZ80Clock.Z80_FILE);
-		    			clock.setSnapshotImportFile(new FileInputStream(f));
-		    		} else if(ftype.equals("sna")) {
-		    			clock.setSnapshotImportFileType(SpectrumZ80Clock.SNA_FILE);
-		    			clock.setSnapshotImportFile(new FileInputStream(f));
-		    		}
-				} catch (FileNotFoundException fnfe) {
-					LOG.warn("Unable to open selected file");
-				}
-		    }
+		if(e.getActionCommand().equalsIgnoreCase("Load")) {
+			handleLoadDialog();
+			synchronized(clock) {
+				clock.notifyAll();
+			}
 		} else if(e.getActionCommand().equalsIgnoreCase("Save")) {
-			JFileChooser chooser = new JFileChooser();
-		    int returnVal = chooser.showSaveDialog(null);
-		    if(returnVal == JFileChooser.APPROVE_OPTION) {
-		    	try {
-		    		File f=chooser.getSelectedFile();
-		    		String ftype=Snapshots.fileType(f.getName());
-		    		if(ftype.equals("z80")) {
-		    			clock.setSnapshotExportFileType(SpectrumZ80Clock.Z80_FILE);
-		    			clock.setSnapshotExportFile(new FileOutputStream(f));
-		    		} else if(ftype.equals("sna")) {
-		    			clock.setSnapshotExportFileType(SpectrumZ80Clock.SNA_FILE);
-		    			clock.setSnapshotExportFile(new FileOutputStream(f));
-		    		} else {
-		    			LOG.warn("Attempted to save into unknown file type "+ftype+".");
-		    		}
-				} catch (FileNotFoundException fnfe) {
-					LOG.warn("Unable to open selected file");
-				}
-		    }
+			handleSaveDialog();
+			synchronized(clock) {
+				clock.notifyAll();
+			}
+		} else if(e.getActionCommand().equalsIgnoreCase("Step")) {
+			clock.stepMode();
+			synchronized(clock) {
+				clock.notifyAll();
+			}
+		} else if(e.getActionCommand().equalsIgnoreCase("Continue")) {
+			clock.runMode();
+			synchronized(clock) {
+				clock.notifyAll();
+			}
 		} else if (e.getActionCommand().equalsIgnoreCase("Exit")) {
 			System.exit(0);
+		} else if (e.getActionCommand().equalsIgnoreCase("About")) {
+			showAboutMessage();
 		}
+	}
+	
+	private void handleLoadDialog() {
+		JFileChooser chooser = new JFileChooser();
+	    int returnVal = chooser.showOpenDialog(null);
+	    if(returnVal == JFileChooser.APPROVE_OPTION) {
+	    	try {
+	    		File f=chooser.getSelectedFile();
+	    		String ftype=Snapshots.fileType(f.getName());
+	    		
+	    		/*
+	    		 * The actual snapshot loading will take place in the main
+	    		 * thread (SpectrumZ80Clock), not here in event dispatch thread.
+	    		 */
+	    		if(ftype.equals("z80")) {
+	    			clock.setSnapshotImportFileType(SpectrumZ80Clock.Z80_FILE);
+	    			clock.setSnapshotImportFile(new FileInputStream(f));
+	    		} else if(ftype.equals("sna")) {
+	    			clock.setSnapshotImportFileType(SpectrumZ80Clock.SNA_FILE);
+	    			clock.setSnapshotImportFile(new FileInputStream(f));
+	    		}
+			} catch (FileNotFoundException fnfe) {
+				LOG.warn("Unable to load selected file");
+			}
+	    }
+	}
+	
+	private void handleSaveDialog() {
+		JFileChooser chooser = new JFileChooser();
+	    int returnVal = chooser.showSaveDialog(null);
+	    if(returnVal == JFileChooser.APPROVE_OPTION) {
+	    	try {
+	    		File f=chooser.getSelectedFile();
+	    		String ftype=Snapshots.fileType(f.getName());
+	    		if(ftype.equals("z80")) {
+	    			clock.setSnapshotExportFileType(SpectrumZ80Clock.Z80_FILE);
+	    			clock.setSnapshotExportFile(new FileOutputStream(f));
+	    		} else if(ftype.equals("sna")) {
+	    			clock.setSnapshotExportFileType(SpectrumZ80Clock.SNA_FILE);
+	    			clock.setSnapshotExportFile(new FileOutputStream(f));
+	    		} else {
+	    			LOG.warn("Attempted to save into unknown file type "+ftype+".");
+	    		}
+			} catch (FileNotFoundException fnfe) {
+				LOG.warn("Unable to open selected file");
+			}
+	    }
+	}
+	
+	private void showAboutMessage() {
+		JOptionPane.showMessageDialog(parentFrame,
+				"Jeccy - Spectrum emulator - (C) 2009, Mikko Nummelin\n"+
+				"This program is free software and comes with ABSOLUTELY NO WARRANTY.",
+				"About",
+				JOptionPane.INFORMATION_MESSAGE);
 	}
 }
