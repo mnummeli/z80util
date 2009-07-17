@@ -54,6 +54,10 @@ public class SpectrumGUI {
 		return regFields;
 	}
 	
+	private JPanel tablePanel;
+	private JTable table;
+	private JScrollPane tableScrollPane;
+	
 	/* The event listener, which is also the main Spectrum controller for
 	 * keyboard and menu options. */
 	private SpectrumControls controller;
@@ -83,6 +87,7 @@ public class SpectrumGUI {
 		
 		/* Creation of the debugger GUI frame */
 		debuggerFrame=new JFrame();
+		debuggerFrame.setLayout(new BorderLayout());
 		debuggerFrame.setTitle("Z80 disassembler/debugger - (C) 2009, Mikko Nummelin");
 		debuggerFrame.setIconImage(LogoFactory.createLogo());
 		debuggerFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
@@ -130,7 +135,11 @@ public class SpectrumGUI {
 		GUIFrameMenuBar.add(helpMenu);
 		
 		/* Debugger panels */
-		regsPanel=new JPanel(new BorderLayout());
+		regsPanel=new JPanel(new BorderLayout()) {
+			public Dimension getPreferredSize() {
+				return new Dimension(200,500);
+			}
+		};
 		regsPanel.setBorder(BorderFactory.createTitledBorder("Register values"));
 		regLabels=new JLabel[13];
 		regFields=new JTextField[13];
@@ -159,7 +168,14 @@ public class SpectrumGUI {
 		regsPanel.add(normalRegsPanel,BorderLayout.WEST);
 		regsPanel.add(altRegsPanel,BorderLayout.EAST);
 		regsPanel.add(specRegsPanel,BorderLayout.SOUTH);
-		debuggerFrame.add(regsPanel);
+		debuggerFrame.add(regsPanel, BorderLayout.WEST);
+		
+		tablePanel=new JPanel();
+		table=new JTable(10,2);
+		tableScrollPane=new JScrollPane(table,JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		tablePanel.add(tableScrollPane);
+		debuggerFrame.add(tablePanel, BorderLayout.CENTER);
 		
 		/* Finishing the setup and setting the main frame, but NOT debugger
 		 * frame, visible */
