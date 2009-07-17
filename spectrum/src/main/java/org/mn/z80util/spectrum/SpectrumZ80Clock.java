@@ -23,6 +23,8 @@ package org.mn.z80util.spectrum;
 
 import java.io.*;
 
+import javax.swing.SwingUtilities;
+
 import org.apache.log4j.*;
 import org.mn.z80util.disassembler.*;
 import org.mn.z80util.z80.*;
@@ -74,6 +76,11 @@ public class SpectrumZ80Clock implements Runnable {
     private Z80 z80;
     public void setZ80(Z80 z80) {
         this.z80=z80;
+    }
+    
+    private SpectrumGUI gui;
+    public void setGui(SpectrumGUI gui) {
+    	this.gui=gui;
     }
 
     private boolean paused=false;
@@ -157,6 +164,11 @@ public class SpectrumZ80Clock implements Runnable {
     			}
 
     			try {
+    				SwingUtilities.invokeLater(new Runnable() {
+    					public void run() {
+    						gui.updateDebuggerInfo();
+    					}
+    				});
     				wait();
     				ula.markScreenDirty();
     			} catch (InterruptedException e) {

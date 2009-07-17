@@ -28,6 +28,8 @@ import javax.swing.*;
 
 import org.apache.log4j.*;
 import org.mn.z80util.*;
+import org.mn.z80util.disassembler.*;
+import org.mn.z80util.z80.*;
 
 public class SpectrumGUI {
 	Logger LOG=Logger.getLogger(SpectrumGUI.class);
@@ -41,14 +43,16 @@ public class SpectrumGUI {
 	
 	/* The GUI components (debugger) */
 	private JFrame debuggerFrame;
-	private JPanel stepControlPanel, regsPanel, switchableRegsPanel, uniqueRegsPanel,
-		assemblyListPanel, rangesPanel;
-	private JButton stepButton, continueButton;
-	private JTextField af, bc, de, hl, af_alt, bc_alt, de_alt, hl_alt,
-		ix, iy, sp, pc, ir, im_iff;
-	private JTable assemblyListTable;
-	private JLabel startLabel, endLabel;
-	private JTextField startAddr, endAddr;
+	private JPanel regsPanel;
+	private JLabel[] regLabels;
+	private String[] regLabelTexts={"AF = ","BC = ","DE = ","HL = ",
+			"AF' = ","BC' = ","DE' = ","HL' =",
+			"IX = ","IY = ","SP = ","PC = ","IR = "};
+	
+	private JTextField[] regFields;
+	public JTextField[] getRegFields() {
+		return regFields;
+	}
 	
 	/* The event listener, which is also the main Spectrum controller for
 	 * keyboard and menu options. */
@@ -61,6 +65,11 @@ public class SpectrumGUI {
 	private SpectrumScreen screen;
 	public void setScreen(SpectrumScreen screen) {
 		this.screen=screen;
+	}
+	
+	private Z80 z80;
+	public void setZ80(Z80 z80) {
+		this.z80=z80;
 	}
 
 	public void createAndShowGUI() {
@@ -120,47 +129,36 @@ public class SpectrumGUI {
 		helpMenu.add(aboutItem);
 		GUIFrameMenuBar.add(helpMenu);
 		
-		/* Debugger */
-		stepControlPanel=new JPanel();
-		stepButton=new JButton("Step");
-		stepButton.addActionListener(controller);
-		continueButton=new JButton("Continue");
-		continueButton.addActionListener(controller);
-		stepControlPanel.add(stepButton);
-		stepControlPanel.add(continueButton);
-		debuggerFrame.add(stepControlPanel);
-
-		regsPanel=new JPanel();
-		switchableRegsPanel=new JPanel(new GridLayout(4,2));
-		af=new JTextField(); af_alt=new JTextField();
-		switchableRegsPanel.add(af);
-		switchableRegsPanel.add(af_alt);
-		bc=new JTextField(); bc_alt=new JTextField();
-		switchableRegsPanel.add(bc);
-		switchableRegsPanel.add(bc_alt);
-		de=new JTextField(); de_alt=new JTextField();
-		switchableRegsPanel.add(de);
-		switchableRegsPanel.add(de_alt);
-		hl=new JTextField(); hl_alt=new JTextField();
-		switchableRegsPanel.add(hl);
-		switchableRegsPanel.add(hl_alt);
-		regsPanel.add(switchableRegsPanel);
-		
-		uniqueRegsPanel=new JPanel();
-		uniqueRegsPanel.setLayout(new GridLayout(6,1));
-		ix=new JTextField();
-		uniqueRegsPanel.add(ix);
-		iy=new JTextField();
-		uniqueRegsPanel.add(iy);
-		sp=new JTextField();
-		uniqueRegsPanel.add(sp);
-		pc=new JTextField();
-		uniqueRegsPanel.add(pc);
-		ir=new JTextField();
-		uniqueRegsPanel.add(ir);
-		im_iff=new JTextField();
-		uniqueRegsPanel.add(im_iff);
-		regsPanel.add(uniqueRegsPanel);
+		/* Debugger panels */
+		regsPanel=new JPanel(new BorderLayout());
+		regsPanel.setBorder(BorderFactory.createTitledBorder("Register values"));
+		regLabels=new JLabel[13];
+		regFields=new JTextField[13];
+		JPanel normalRegsPanel=new JPanel(new GridLayout(4,1));
+		normalRegsPanel.setBorder(BorderFactory.createTitledBorder("Normal"));
+		JPanel altRegsPanel=new JPanel(new GridLayout(4,1));
+		altRegsPanel.setBorder(BorderFactory.createTitledBorder("Alternative"));
+		JPanel specRegsPanel=new JPanel(new GridLayout(5,1));
+		specRegsPanel.setBorder(BorderFactory.createTitledBorder("Special"));
+		JPanel regInfoPanels[] =new JPanel[13];
+		for(int i=0;i<13;i++) {
+			regLabels[i]=new JLabel(regLabelTexts[i]);
+			regFields[i]=new JTextField("xxxx");
+			regFields[i].setEditable(false);
+			regInfoPanels[i]=new JPanel();
+			regInfoPanels[i].add(regLabels[i]);
+			regInfoPanels[i].add(regFields[i]);
+			if(i<4) {
+				normalRegsPanel.add(regInfoPanels[i]);
+			} else if((i>=4) && (i<8)) {
+				altRegsPanel.add(regInfoPanels[i]);
+			} else {
+				specRegsPanel.add(regInfoPanels[i]);
+			}
+		}
+		regsPanel.add(normalRegsPanel,BorderLayout.WEST);
+		regsPanel.add(altRegsPanel,BorderLayout.EAST);
+		regsPanel.add(specRegsPanel,BorderLayout.SOUTH);
 		debuggerFrame.add(regsPanel);
 		
 		/* Finishing the setup and setting the main frame, but NOT debugger
@@ -172,5 +170,18 @@ public class SpectrumGUI {
 		GUIFrame.pack();
 		GUIFrame.setResizable(false);
 		GUIFrame.setVisible(true);
+	}
+	
+	public void updateDebuggerInfo() {
+		if(!SwingUtilities.isEventDispatchThread()) {
+			LOG.fatal("Attempted to update debugger text fields outside event " +
+					"dispatch thread. This is not legal due to Swing concurrency " +
+					"issues.");
+			System.exit(1);
+		}
+		
+		for(int i=0;i<13;i++) {
+			regFields[i].setText(Hex.intToHex4(z80.getRegPair(i)));
+		}
 	}
 }

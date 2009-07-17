@@ -40,6 +40,9 @@ public class Main {
 	private static Logger LOG=Logger.getLogger(Main.class);
 	private static String[] args;
 	
+	/* Basic components */
+	private static Z80 z80;
+	private static SpectrumULA ula;
 	private static SpectrumZ80Clock clock;
 	private static SpectrumScreen scr;
 	private static SpectrumControls controller;
@@ -50,9 +53,9 @@ public class Main {
 		Main.args=args;
 
 		/* Creates basic components */
-		Z80 z80                 = new YazeBasedZ80Impl();
-		// Z80 z80				= new QaopZ80Impl();
-		SpectrumULA ula         = new SpectrumULA();
+		z80                 	= new YazeBasedZ80Impl();
+		// z80					= new QaopZ80Impl();
+		ula         			= new SpectrumULA();
 		clock  					= new SpectrumZ80Clock();
 		scr  					= new SpectrumScreen();
 		controller 				= new SpectrumControls();
@@ -63,11 +66,13 @@ public class Main {
 		ula.setScreen(scr);
 		clock.setZ80(z80);
 		clock.setUla(ula);
+		clock.setGui(spectrumGUI);
 		scr.setUla(ula);
 		controller.setUla(ula);
 		controller.setClock(clock);
 		spectrumGUI.setScreen(scr);
 		spectrumGUI.setController(controller);
+		spectrumGUI.setZ80(z80);
 				
 		/* Resets ULA and Z80 processor */
 		ula.reset();
