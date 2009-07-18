@@ -73,6 +73,7 @@ public class Main {
 		spectrumGUI.setScreen(scr);
 		spectrumGUI.setController(controller);
 		spectrumGUI.setZ80(z80);
+		spectrumGUI.setUla(ula);
 				
 		/* Resets ULA and Z80 processor */
 		ula.reset();

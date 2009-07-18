@@ -297,6 +297,8 @@ private Logger LOG=Logger.getLogger(SpectrumControls.class);
 			System.exit(0);
 		} else if (e.getActionCommand().equalsIgnoreCase("About")) {
 			showAboutMessage();
+		} else {
+			LOG.warn("Unknown action command: "+e.getActionCommand());
 		}
 	}
 	

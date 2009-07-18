@@ -61,6 +61,10 @@ public class SpectrumGUI {
 	private JTable table;
 	private JScrollPane tableScrollPane;
 	
+	private JPanel controlsPanel;
+	private JButton stepButton, continueButton, submitButton;
+	private JTextField start, end;
+	
 	/* The event listener, which is also the main Spectrum controller for
 	 * keyboard and menu options. */
 	private SpectrumControls controller;
@@ -74,6 +78,13 @@ public class SpectrumGUI {
 		this.screen=screen;
 	}
 	
+	/* The ULA */
+	private SpectrumULA ula;
+	public void setUla(SpectrumULA ula) {
+		this.ula=ula;
+	}
+	
+	/* The processor */
 	private Z80 z80;
 	public void setZ80(Z80 z80) {
 		this.z80=z80;
@@ -143,11 +154,7 @@ public class SpectrumGUI {
 		GUIFrameMenuBar.add(helpMenu);
 		
 		/* Debugger panels */
-		regsPanel=new JPanel(new BorderLayout()) {
-			public Dimension getPreferredSize() {
-				return new Dimension(200,200);
-			}
-		};
+		regsPanel=new JPanel(new BorderLayout());
 		regsPanel.setBorder(BorderFactory.createTitledBorder("Register values"));
 		regLabels=new JLabel[13];
 		regFields=new JTextField[13];
@@ -160,7 +167,7 @@ public class SpectrumGUI {
 		JPanel regInfoPanels[] =new JPanel[13];
 		for(int i=0;i<13;i++) {
 			regLabels[i]=new JLabel(regLabelTexts[i]);
-			regFields[i]=new JTextField("xxxx");
+			regFields[i]=new JTextField("xxxxxx");
 			regFields[i].setEditable(false);
 			regInfoPanels[i]=new JPanel();
 			regInfoPanels[i].add(regLabels[i]);
@@ -178,7 +185,9 @@ public class SpectrumGUI {
 		regsPanel.add(specRegsPanel,BorderLayout.SOUTH);
 		debuggerFrame.add(regsPanel, BorderLayout.WEST);
 		
+		/* The disassembler table */
 		tablePanel=new JPanel();
+		tablePanel.setBorder(BorderFactory.createTitledBorder("Disassembler table"));
 		debuggerTableModel=new DebuggerTableModel();
 		debuggerTableModel.setCommandListing(new LinkedList<DisasmResult>());
 		table=new JTable(debuggerTableModel);
@@ -186,6 +195,26 @@ public class SpectrumGUI {
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		tablePanel.add(tableScrollPane);
 		debuggerFrame.add(tablePanel, BorderLayout.CENTER);
+		
+		/* The controls panel */
+		controlsPanel=new JPanel();
+		controlsPanel.setBorder(BorderFactory.createTitledBorder("Controls"));
+		stepButton=new JButton("Step");
+		stepButton.addActionListener(controller);
+		controlsPanel.add(stepButton);
+		continueButton=new JButton("Continue");
+		continueButton.addActionListener(controller);
+		controlsPanel.add(continueButton);
+		controlsPanel.add(new JLabel("Start address:"));
+		start=new JTextField("xxxxxx");
+		controlsPanel.add(start);
+		controlsPanel.add(new JLabel("End address:"));
+		end=new JTextField("xxxxxx");
+		controlsPanel.add(end);
+		submitButton=new JButton("Submit");
+		submitButton.addActionListener(controller);
+		controlsPanel.add(submitButton);;		
+		debuggerFrame.add(controlsPanel, BorderLayout.SOUTH);
 		
 		/* Finishing the setup and setting the main frame, but NOT debugger
 		 * frame, visible */
@@ -209,5 +238,23 @@ public class SpectrumGUI {
 		for(int i=0;i<13;i++) {
 			regFields[i].setText(Hex.intToHex4(z80.getRegPair(i)));
 		}
+	}
+	
+	public void addCommandRow(int address) {
+		LinkedList<DisasmResult> tableContents=
+			debuggerTableModel.getCommandListing();
+		
+		/* Check that the command is not already here? */
+		for(int i=0;i<tableContents.size();i++) {
+			if((tableContents.get(i).getStartAddr() & 0xffff)==
+				(address&0xffff)) {
+				return;
+			}
+		}
+		byte[] memory=ula.getMemory();
+		DisasmResult dar=Disassembler.disassemble(memory,(short)address);
+		tableContents.add(dar);
+		debuggerTableModel.fireTableStructureChanged();
+		LOG.debug("Disassembler command added to table.");
 	}
 }

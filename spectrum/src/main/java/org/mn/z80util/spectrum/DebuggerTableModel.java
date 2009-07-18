@@ -27,7 +27,7 @@ public class DebuggerTableModel extends AbstractTableModel {
 		DisasmResult dar=commandListing.get(rowIndex);
 		switch (columnIndex) {
 		case 0:
-			return dar.getStartAddr();
+			return Hex.intToHex4(dar.getStartAddr());
 		case 1:
 			return dar.getHexDigits();
 		case 2:

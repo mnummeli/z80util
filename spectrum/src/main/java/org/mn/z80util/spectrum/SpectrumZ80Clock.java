@@ -153,6 +153,8 @@ public class SpectrumZ80Clock implements Runnable {
     		String cmdString=Hex.intToHex4(pc & 0xffff)+" "+dar.getHexDigits()+
     		dar.getCommand();
     		LOG.debug(cmdString);
+    		
+    		gui.addCommandRow(pc);
     	}
 
     	while(true) {
