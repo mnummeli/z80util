@@ -25,6 +25,9 @@ import java.awt.*;
 import java.awt.event.*;
 
 import javax.swing.*;
+import javax.swing.table.*;
+
+import java.util.*;
 
 import org.apache.log4j.*;
 import org.mn.z80util.*;
@@ -74,6 +77,11 @@ public class SpectrumGUI {
 	private Z80 z80;
 	public void setZ80(Z80 z80) {
 		this.z80=z80;
+	}
+	
+	private DebuggerTableModel debuggerTableModel;
+	public DebuggerTableModel getDebuggerTableModel() {
+		return debuggerTableModel;
 	}
 
 	public void createAndShowGUI() {
@@ -137,7 +145,7 @@ public class SpectrumGUI {
 		/* Debugger panels */
 		regsPanel=new JPanel(new BorderLayout()) {
 			public Dimension getPreferredSize() {
-				return new Dimension(200,500);
+				return new Dimension(200,200);
 			}
 		};
 		regsPanel.setBorder(BorderFactory.createTitledBorder("Register values"));
@@ -171,7 +179,9 @@ public class SpectrumGUI {
 		debuggerFrame.add(regsPanel, BorderLayout.WEST);
 		
 		tablePanel=new JPanel();
-		table=new JTable(10,2);
+		debuggerTableModel=new DebuggerTableModel();
+		debuggerTableModel.setCommandListing(new LinkedList<DisasmResult>());
+		table=new JTable(debuggerTableModel);
 		tableScrollPane=new JScrollPane(table,JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		tablePanel.add(tableScrollPane);

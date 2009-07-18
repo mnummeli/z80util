@@ -183,7 +183,8 @@ public final class Disassembler {
 			}
 		}
 		
-		return new DisasmResult(bytes_read, getCommandHexDigits(), command);
+		return new DisasmResult(address, bytes_read, getCommandHexDigits(),
+				command);
 	}
 	
 	private static String addr_from_dis() {

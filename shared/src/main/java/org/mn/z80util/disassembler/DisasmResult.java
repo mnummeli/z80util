@@ -23,10 +23,17 @@ package org.mn.z80util.disassembler;
 
 public final class DisasmResult {
 
-	public DisasmResult(int bytesRead, String hexDigits, String command) {
+	public DisasmResult(int startAddr, int bytesRead, String hexDigits,
+			String command) {
+		this.startAddr=startAddr;
 		this.bytesRead=bytesRead;
 		this.hexDigits=hexDigits;
 		this.command=command;
+	}
+	
+	private int startAddr;
+	public int getStartAddr() {
+		return startAddr;
 	}
 	
 	private int bytesRead;
