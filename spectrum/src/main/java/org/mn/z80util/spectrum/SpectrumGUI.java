@@ -48,8 +48,8 @@ public class SpectrumGUI {
 	private JFrame debuggerFrame;
 	private JPanel regsPanel;
 	private JLabel[] regLabels;
-	private String[] regLabelTexts={"AF = ","BC = ","DE = ","HL = ",
-			"AF' = ","BC' = ","DE' = ","HL' =",
+	private String[] regLabelTexts={"BC = ","DE = ","HL = ", "AF = ",
+			"BC ' = ","DE ' = ","HL ' =", "AF ' = ",
 			"IX = ","IY = ","SP = ","PC = ","IR = "};
 	
 	private JTextField[] regFields;
@@ -212,8 +212,14 @@ public class SpectrumGUI {
 		end=new JTextField("xxxxxx");
 		controlsPanel.add(end);
 		submitButton=new JButton("Submit");
-		submitButton.addActionListener(controller);
-		controlsPanel.add(submitButton);;		
+		submitButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				int startAddr=Hex.hexToInt(start.getText());
+				int endAddr=Hex.hexToInt(end.getText());
+				addCommandListing(startAddr, endAddr);
+			}
+		});
+		controlsPanel.add(submitButton);
 		debuggerFrame.add(controlsPanel, BorderLayout.SOUTH);
 		
 		/* Finishing the setup and setting the main frame, but NOT debugger
@@ -240,6 +246,12 @@ public class SpectrumGUI {
 		}
 	}
 	
+	/**
+	 * Adds a command row to the end of the table, if it is not already listed.
+	 * Does not delete previous results.
+	 * 
+	 * @param address	New command row
+	 */
 	public void addCommandRow(int address) {
 		LinkedList<DisasmResult> tableContents=
 			debuggerTableModel.getCommandListing();
@@ -248,13 +260,35 @@ public class SpectrumGUI {
 		for(int i=0;i<tableContents.size();i++) {
 			if((tableContents.get(i).getStartAddr() & 0xffff)==
 				(address&0xffff)) {
+				table.setRowSelectionInterval(i,i);
 				return;
 			}
 		}
 		byte[] memory=ula.getMemory();
 		DisasmResult dar=Disassembler.disassemble(memory,(short)address);
 		tableContents.add(dar);
-		debuggerTableModel.fireTableStructureChanged();
 		LOG.debug("Disassembler command added to table.");
+		int i=tableContents.size()-1;
+		table.setRowSelectionInterval(i,i);
+		debuggerTableModel.fireTableStructureChanged();
+	}
+	
+	/**
+	 * Empties previous command table and adds all commands between start and
+	 * end addresses into it.
+	 * 
+	 * @param start		Start address (included)
+	 * @param end		End address (possibly excluded)
+	 */
+	public void addCommandListing(int start, int end) {
+		LinkedList<DisasmResult> newTableContents=new LinkedList<DisasmResult>();
+		byte[] memory=ula.getMemory();
+		for(int i=(start & 0xffff); i<(end & 0xffff);) {
+			DisasmResult dar=Disassembler.disassemble(memory,(short)i);
+			newTableContents.add(dar);
+			i+=dar.getBytesRead() & 0xffff;
+		}
+		debuggerTableModel.setCommandListing(newTableContents);
+		debuggerTableModel.fireTableStructureChanged();
 	}
 }
