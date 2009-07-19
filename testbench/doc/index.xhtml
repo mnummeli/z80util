@@ -1,0 +1,258 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+	<title>Mikko Nummelin : Mikko's Z80 and Sinclair ZX Spectrum utilities.</title>
+    	<meta name="Author" content="Mikko Nummelin"/>
+    	<meta name="keywords" content="Mikko Nummelin, MZ80TestBench, homepage,
+    		Z80, Sinclair, Spectrum, zexall, exerciser, testbench, program,
+    		retro-computing, emulator"/>
+    	<link href="spectrum.css" rel="stylesheet" type="text/css"/>
+    	<meta http-equiv="Content-type" content="text/html; charset=UTF8"/>
+	</head>
+	
+<!-- Try to keep the text less than 80 characters wide ********************* -->
+
+	<body>
+	<h1>Mikko's Z80 and Sinclair ZX Spectrum utilities</h1>
+	<hr/>
+	<h2>General information about the package</h2>
+	<p>
+		Mikko's Z80 and Sinclair ZX Spectrum utilities is a collection of Java
+		applications which are used in emulating, testing, debugging and
+		profiling Z80 processor, Z80 systems and Sinclair ZX Spectrum
+		implementations. Currently (as of 2009-07-19) the package consists
+		of a <a href="#testbench">Z80 test bench</a>, <a href="#spectrumemulator">
+		Spectrum emulator</a> and embedded Z80
+		disassembler/debugger.
+	</p>
+	<h2>Download</h2>
+	<p>
+		You may choose the version from the following table. Currently
+		(as of 2009-07-19), only source package is available.
+		<table border="1" summary="Download options" align="center">
+		<caption>Download options</caption>
+		<tr><th>Binary</th><th>Source</th></tr>
+		<tr><td>-</td><td><a href="foo">mz80util-0.8.tar.gz</a></td></tr>
+		</table>
+	</p>
+	<h2>Requirements</h2>
+	<p>
+		The source package requires <a href="http://maven.apache.org/">
+		Apache Maven</a> as a compilation tool. You may download it from
+		<a href="http://maven.apache.org/download.html">here</a> and
+		follow the <a href="http://maven.apache.org/download.html#Installation">
+		installation instructions</a>.
+	</p>
+	<h2>Installation of Z80 utilities</h2>
+	<p>
+		After properly configuring Maven, you may install the Z80 utilities
+		package. Unzip the package by
+		<pre class="example">$ zcat mz80util-&lt;version&gt;.tar.gz | tar xvf -</pre>
+		change directory to it by <pre class="example">$ cd mz80util-&lt;version&gt;</pre>
+		and compile it by <pre class="example">$ mvn clean install</pre>
+	</p>
+	<h2>Testing the Z80 utilities</h2>
+	<p>
+		Change to Z80 test bench directory <pre class="example">$ cd testbench</pre>
+		and type <pre class="example">$ mvn exec:java</pre> This should launch the
+		testbench with two Z80 emulator implementations described in detail below.
+		Close the testbench and change then to Spectrum directory by
+		<pre class="example">$ cd ../spectrum</pre> and again type
+		<pre class="example">$ mvn exec:java</pre> This should launch the Spectrum
+		emulator with grayish-white background and Sinclair copyright text in it.
+	</p>
+	<hr/>
+	<h2 id="testbench">MZ80TestBench - an open source Z80 test bench application</h2>
+	<img src="testbenchsuccess.jpg">MZ80TestBench after successful processor
+		feature comparison.</img>
+	<hr/>
+	<h3>General things about Z80 processor</h3>
+	<p>
+		It is often a somewhat difficult task to correctly emulate a processor,
+		even a relatively simple one, like Z80. Although it seems simple to
+		assign values to registers and memory address, there are anyway lots
+		of commands and some of them affect the so-called flags register, F,
+		in a strange way. Especially if one uses shortcuts and tries to
+		implement a large number of commands in same <code>if</code> construct,
+		for example taking advantage of syntax of <code>LD Q,R</code>
+		whose binary opcode is in general <code>01QQQRRR</code> where
+		<code>Q</code> and <code>R</code> are taken from the following table:
+	</p>
+		<table border="1" summary="Register-register load instructions"
+			align="center">
+			<caption>LD Q,R</caption>
+			<tr><th>Value of Q or R</th><th>Register / memory pointer</th></tr>
+			<tr><td>000</td><td>B</td></tr>
+			<tr><td>001</td><td>C</td></tr>
+			<tr><td>010</td><td>D</td></tr>
+			<tr><td>011</td><td>E</td></tr>
+			<tr><td>100</td><td>H</td></tr>
+			<tr><td>101</td><td>L</td></tr>
+			<tr><td>110</td><td>(HL)</td></tr>
+			<tr><td>111</td><td>A</td></tr>
+		</table>
+	<p>
+		Here we have multiple things to be aware of. For example the special
+		value <code>110</code> which stands for memory pointer
+		<code>(HL)</code> but not a register. To make things more complicated,
+		if this type of command is <code>DDh</code> or
+		<code>FDh</code>-prefixed, then the command reads or writes from an
+		indexed memory reference, ie. the three-byte machine instruction
+		"<code>DD 74 E0 </code>" stands for <code>LD (IX-20h),H </code>,
+		<i>not</i> <code>LD (IX),H </code>, <code>LD (IX+E0h),H </code> nor
+		<code>LD (IX-20h), IXH </code>. Without forgetting that the binary
+		code <code>01110110=76h</code> stands for <code>HALT</code>, not any
+		sort of load or store command at all! One therefore often needs to
+		rely to a verifier, testbench or exerciser against one's own Z80
+		emulator, whatever we call it.
+	</p>
+	<p>
+		If at this point you feel that you know nothing what the above is all
+		about, please refer to some of the following links:
+	</p>
+	<ul>
+		<li><a href="http://en.wikipedia.org/wiki/Zilog_Z80">Wikipedia: Zilog
+			Z80 processor</a></li>
+		<li><a href="http://www.z80.info/">Thomas Scherrer: Z80-family official
+			support page</a></li>
+		<li><a href="http://www.worldofspectrum.org/">World of Spectrum</a>
+			</li>
+	</ul>
+	<hr/>
+	
+<!-- Try to keep the text less than 80 characters wide ********************* -->
+	
+	<h3>Z80 emulators compatible with this testbench</h3>
+	<p>
+		To design your Z80 emulator compatible for this testbench, there is
+		just <i>two</i> requirements, it <i>must</i> implement packages
+		<a href="Z80.java.txt">Z80-interface</a> and it must be declared as
+		a Spring Framework bean as described below.
+		There are two complete examples of such Z80 cores
+		here, (a) <a href="YazeBasedZ80Impl.java.txt">YazeBasedZ80Impl</a> +
+		<a href="YazeBasedALU.java.txt">YazeBasedALU</a>,
+		and (b) <a href="QaopZ80Impl.java.txt">QaopZ80Impl</a>. The "Yaze"-one
+		is loosely (only central ALU-functions, as the command fork in this
+		one is implemented by me!) based on
+		<a href="http://www.mathematik.uni-ulm.de/users/ag/yaze-ag/">
+		Yaze-AG</a>, many authors, but originally written by Frank D. Cringle.
+		The "Qaop"-one is based on
+		<a href="http://wizard.ae.krakow.pl/~jb/qaop/">Qaop</a>, which is a
+		Z80 and Sinclair ZX Spectrum emulator written by Jan Bobrowski and
+		further based on "The Undocumented Z80 Documented" by Sean Young.
+	</p>
+	<hr/>
+
+	<h3>Smoke-testing the testbench</h3>
+	<p>
+		To check that the test bench actually works and manages to print the
+		code and name of the failing instruction properly, you may make a
+		minor change to either one of the provided processor implementations
+		(to calculate a single or couple of Z80 instruction wrong) and then
+		re-compile and re-run the application. The application should halt
+		with the progress bar turning red and provide a detailed message, what
+		went wrong. Below is an example what happens, if
+		<a href="QaopZ80Impl.java.txt">QaopZ80Impl</a>:s "CP D" command was
+		corrupted like this:
+<pre class="example">
+ case 0xB9: cp(C); break;
+ case 0xBA: /* cp(D) */ cp(E); break;
+ case 0xBB: cp(E); break;
+</pre>
+	</p>
+		<img src="testbenchfailure.jpg">MZ80TestBench after failed processor
+		feature comparison.</img>
+	<p>
+		Note that it failed in this case to the undocumented 3 and 5 flags.
+		Even if those flags were ignored it would most likely have failed to
+		some other flags like the carry flag, as the test is repeated many
+		times (specified in "spring-testbench.xml") per instruction.
+	</p>
+	<hr/>
+
+	<h3>Wiring your Z80 emulator class into testbench</h3>
+	<p>
+		The testbench uses <a href="http://www.springsource.org/">
+		Spring Framework</a> for dependency
+		injection. There should be a file named "spring-testbench.xml", with
+		a section like this:
+<pre class="example">
+&lt;bean id="testbench" class="org.mn.z80util.testbench.MZ80TestBench"&gt;
+    &lt;property name="processor1" ref="YazeProcessor"/&gt;
+    &lt;property name="processor2" ref="QaopProcessor"/&gt;
+    ...
+&lt;/bean&gt;
+</pre>
+		You should replace either one of the processors with your own
+		processor's Spring bean, resembling the bean definition like this,
+		found in the same file:
+<pre class="example">
+&lt;bean id="QaopProcessor" class="org.mn.z80util.z80.qaop.QaopZ80Impl"&gt;
+    &lt;property name="ula" ref="ula"/&gt;
+&lt;/bean&gt;
+</pre>
+		After this, you should re-compile and re-run the application.
+		Note that it is possible to start your Z80 emulator from scratch
+		(see MockZ80.java) and develop it command by command or command group
+		by command group test-drivenly against either of the demo
+		implementations.
+	</p>
+	<hr/>
+	<h2 id="spectrumemulator">Jeccy - an open source Sinclair ZX Spectrum emulator</h2>
+	<hr/>
+	<p>
+		Jeccy is a (currently silent) Sinclair ZX Spectrum (48K) emulator which can
+		load and save Z80 and SNA snapshots. TAP or TZX tape files are unfortunately
+		not currently (as of 2009-07-20) supported. To start the Spectrum emulator,
+		chdir into "spectrum/" and type <pre class="example">$ mvn exec:java</pre>
+		You should see the following application window appear:
+	</p>
+		<img src="jeccy_start.jpg" width="50%">The Spectrum main window</img>
+	<p>
+		You may open the disassembler/debugger by choosing "View"-&gt;"Debugger", which
+		should open the following window:
+	</p>
+		<img src="debugger_start.jpg" width="80%">The debugger main window</img>
+	<p>
+		By entering start and end hexadecimal values into "Start address" and
+		"End address"-fields and then pressing "Submit", you should obtain a listing
+		of Z80 machine code instructions. The emulator is built in such a way that entering
+		"step" mode (by "Step" button, "Continue" releases), every command not previously
+		in the machine code listing is appended to the end of it. See the following
+		image:
+	</p>
+		<img src="debugger_stepping.jpg" width="80%">The debugger in use</img>
+	<p>
+		As mentioned before, it is possible to load and save Z80 and SNA snapshots via
+		the "File"-menu. Some of these are available in the following bundle:
+		<a href="">Spectrum example games</a>.
+		One of them is "Manic Miner", by Matthew Smith:
+	</p>
+		<img src="jeccy_manicminer.jpg" width="80%">Manic Miner start screen</img>
+
+	<hr/>
+
+	<h2>Acknowledgements</h2>
+	<p>
+		Special thanks for the following Z80 and Sinclair ZX Spectrum hobbyists and
+		professionals:
+		<ul>
+		    <li><a href="http://wizard.ae.krakow.pl/~jb/qaop/">Jan Bobrowski</a>
+		    from Poland, for Qaop Z80 implementations.</li>
+		    <li><a href="http://www.inf.bme.hu/~mszeredi/spectemu/spectemu.html">
+		    Miklos Szeredi</a> from Hungary, for Z80 and SNA snapshot algorithms,
+		    ported from his Spectemu.</li>
+		    <li><a href="http://www.mathematik.uni-ulm.de/users/ag/yaze-ag/">
+		    Andreas Gerlich</a> from Germany, and Frank D. Cringle (country unknown)
+		    for "YAZE-based ALU" algorithms</li>
+		    <li>Matthew Smith for Manic Miner and Jet Set Willy</li>
+		</ul>
+	</p>
+
+	<hr/>
+
+	<a href="mailto:mikko_DOT_nummelin_AT_tkk_DOT_fi">Mikko Nummelin</a>
+
+	</body>
+</html>
