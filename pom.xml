@@ -26,7 +26,7 @@
 	<groupId>org.mn.z80util</groupId>
 	<artifactId>z80util</artifactId>
 	<packaging>pom</packaging>
-	<version>0.8-SNAPSHOT</version>
+	<version>0.8</version>
 	<name>z80util</name>
 	<url>http://www.tkk.fi/~mnummeli</url>
 	<build>
