@@ -1,0 +1,53 @@
+Mikko's Z80 utilities, (C) 2009, Mikko Nummelin
+===============================================
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+Some parts of the project are derived from other products released under
+GNU General Public Licence.
+
+See COPYING for details.
+
+
+(1) Compilation and installation instructions
+---------------------------------------------
+
+Be sure that you have downloaded, installed and configured Apache Maven properly:
+
+http://maven.apache.org/
+
+You may then compile the package by typing:
+
+$ mvn clean install
+
+at the command prompt.
+
+(2) Running the Z80 testbench
+-----------------------------
+
+Chdir to the testbench directory and run the program with Maven exec plugin:
+
+$ cd testbench/
+
+$ mvn exec:java
+
+(3) Running the Spectrum emulator
+---------------------------------
+
+Chdir to the Spectrum directory and run the program with Maven exec plugin:
+
+$ cd spectrum/
+
+$ mvn exec:java
+
+It is possible to load and save Z80 and SNA snapshots by options listed in
+the "File" menu.
+
+For further details, see index.xhtml in the doc/ subdirectory and the source code.
+
+
+Mikko Nummelin <mikko.nummelin@tkk.fi>
+
