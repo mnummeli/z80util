@@ -22,6 +22,7 @@
 package org.mn.z80util.spectrum;
 
 import java.io.*;
+import java.util.*;
 
 import javax.swing.SwingUtilities;
 
@@ -36,6 +37,18 @@ public class SpectrumZ80Clock implements Runnable {
     private int interrupts, screenLine;
     private long startTime;
     private boolean approveUpdate;
+    
+    /*
+     * A variable for previous PC value, used in profiling and creating
+     * call graphs. -1 means 'no appropriate value'.
+     */
+    private int previousPC=-1;
+    
+    /*
+     * The hash table used for profiling. The key Integer corresponds to
+     * an int representing current command's address.
+     */
+    private TreeMap<Integer,ProfileNode> profilingMap=null;
 
     /*
      * Snapshot file types, flags and functions. These affect the processor
@@ -67,6 +80,9 @@ public class SpectrumZ80Clock implements Runnable {
     public void setSnapshotExportFile(OutputStream snapshotExportFile) {
     	this.snapshotExportFile=snapshotExportFile;
     }
+
+    public volatile boolean startProfiling=false, endProfiling=false,
+    	profilingOn=false;
 
     private SpectrumULA ula;
     public void setUla(SpectrumULA ula) {
@@ -140,6 +156,56 @@ public class SpectrumZ80Clock implements Runnable {
 		}
     }
     
+    private void profilingTrap() {
+    	if(startProfiling) {
+    		LOG.info("Starting profiling.");
+    		startProfiling=false;
+    		profilingOn=true;
+    		previousPC=-1;
+    		profilingMap=new TreeMap<Integer,ProfileNode>();
+    	} else if(endProfiling) {
+    		LOG.info("Ending profiling.");
+    		endProfiling=false;
+    		profilingOn=false;
+
+    		/* TODO: Profiling information writing routines, temporary! */
+    		Set<Map.Entry<Integer,ProfileNode>> addresses=profilingMap.entrySet();
+    		Iterator iter=addresses.iterator();
+    		while(iter.hasNext()) {
+    			System.out.println(iter.next());
+    		}
+    		
+    	} else if(profilingOn) {
+    		
+    		/* Check whether 'previous PC' was in the profile array */
+    		Integer previousPCInteger=new Integer(previousPC);
+    		if((previousPC != -1) &&
+    				(!profilingMap.containsKey(previousPCInteger))) {
+    			ProfileNode node=new ProfileNode();
+    			profilingMap.put(previousPCInteger ,node);
+    		}
+    		
+    		/* Check whether 'current PC' was in the p.a */
+    		Integer currentPCInteger=
+    			new Integer(z80.getRegPair(Z80.PC) & 0xffff);
+    		if(!profilingMap.containsKey(currentPCInteger)) {
+    			ProfileNode node=new ProfileNode();
+    			profilingMap.put(currentPCInteger, node);
+    		}
+    		
+    		/*
+    		 * Here we can make sure (if the virtual machine has not bugged),
+    		 * that we obtain profile nodes for both previous and current
+    		 * addresses.
+    		 */
+    		ProfileNode prevNode=profilingMap.get(previousPCInteger);
+    		ProfileNode currNode=profilingMap.get(currentPCInteger);
+
+    		/* Check whether c. PC is succ. of p. PC, if not, add it */
+    		/* Check whether p. PC is predec. of c. PC, if not, add it */
+    	}
+    }
+    
     /**
      * A single processor step. Should be as fast as possible if not
      * in stepping mode.
@@ -152,14 +218,14 @@ public class SpectrumZ80Clock implements Runnable {
     		DisasmResult dar=Disassembler.disassemble(memory,pc);
     		String cmdString=Hex.intToHex4(pc & 0xffff)+" "+dar.getHexDigits()+
     		dar.getCommand();
-    		LOG.debug(cmdString);
-    		
+    		LOG.debug(cmdString);		
     		gui.addCommandRow(pc);
     	}
 
     	while(true) {
     		synchronized(this) {
     			snapshotTrap();
+    			profilingTrap();
 
     			if(!paused) {
     				break;
@@ -179,6 +245,11 @@ public class SpectrumZ80Clock implements Runnable {
     		}
     	}
 
+    	/*
+    	 * The previous value of PC is stored to enable collecting of
+    	 * call graph information.
+    	 */
+    	previousPC=z80.getRegPair(Z80.PC) & 0xffff;
     	z80.executeNextCommand();
     }
     
@@ -248,4 +319,15 @@ public class SpectrumZ80Clock implements Runnable {
         	processorInterruptPeriod();
         }
     }
+}
+
+class ProfileNode {
+	ProfileNode() {
+		successors=new LinkedList<ProfileNode>();
+		predecessors=new LinkedList<ProfileNode>();
+	}
+	
+	int density=0;
+	LinkedList<ProfileNode> successors;
+	LinkedList<ProfileNode> predecessors;
 }

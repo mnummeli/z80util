@@ -290,6 +290,15 @@ private Logger LOG=Logger.getLogger(SpectrumControls.class);
 			synchronized(clock) {
 				clock.notifyAll();
 			}
+		} else if(e.getActionCommand().equalsIgnoreCase("Profiling")) {
+			if(!clock.profilingOn) {
+				clock.startProfiling=true;
+			} else {
+				clock.endProfiling=true;
+			}
+			synchronized(clock) {
+				clock.notifyAll();
+			}
 		} else if(e.getActionCommand().equalsIgnoreCase("Debugger")) {
 			debuggerFrame.pack();
 			debuggerFrame.setVisible(true);
