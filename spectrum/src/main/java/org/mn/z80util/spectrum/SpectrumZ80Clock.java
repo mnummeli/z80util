@@ -38,17 +38,9 @@ public class SpectrumZ80Clock implements Runnable {
     private long startTime;
     private boolean approveUpdate;
     
-    /*
-     * A variable for previous PC value, used in profiling and creating
-     * call graphs. -1 means 'no appropriate value'.
-     */
-    private int previousPC=-1;
-    
-    /*
-     * The hash table used for profiling. The key Integer corresponds to
-     * an int representing current command's address.
-     */
-    private TreeMap<Integer,ProfileNode> profilingMap=null;
+    /* Profiling variables */
+    private int previousPC=-1, currentPC=-1;
+    private ProfileNode[] profilingMap;
 
     /*
      * Snapshot file types, flags and functions. These affect the processor
@@ -162,63 +154,27 @@ public class SpectrumZ80Clock implements Runnable {
     		startProfiling=false;
     		profilingOn=true;
     		previousPC=-1;
-    		ProfileNode[] profilingMap=new ProfileNode[0x10000];
+    		profilingMap=new ProfileNode[0x10000];
     	} else if(endProfiling) {
     		LOG.info("Ending profiling.");
     		endProfiling=false;
     		profilingOn=false;
 
-    		/* TODO: This is buggy.
-    		Set<Map.Entry<Integer,ProfileNode>> addresses=profilingMap.entrySet();
-    		Iterator<Map.Entry<Integer,ProfileNode>> iter=addresses.iterator();
-    		while(iter.hasNext()) {
-    			Map.Entry<Integer,ProfileNode> entry=iter.next();
-    			int addr=entry.getKey().intValue();
-    			System.out.println("Command address: "+Hex.intToHex4(addr));
-    			System.out.println("Successors: ");
-    			Iterator<ProfileNode> iter2=entry.getValue().successors.iterator();
-    			while(iter2.hasNext()) {
+    		/* Print or offer to save the profile */
+    		for(int i=0;i<0x10000;i++) {
+    			if(profilingMap[i]!=null) {
+    				System.out.println(Hex.intToHex4(i)+" : "+profilingMap[i].density);
     			}
     		}
-    		*/
     		
     	} else if(profilingOn) {
-    		
-    		/* Check whether 'previous PC' was in the profile array */
-    		Integer previousPCInteger=new Integer(previousPC);
-    		if((previousPC != -1) &&
-    				(!profilingMap.containsKey(previousPCInteger))) {
-    			ProfileNode node=new ProfileNode();
-    			profilingMap.put(previousPCInteger ,node);
+    		int currentPC=z80.getRegPair(Z80.PC) & 0xffff;
+    		if(profilingMap[currentPC] == null) {
+    			profilingMap[currentPC]=new ProfileNode();
     		}
-    		
-    		/* Check whether 'current PC' was in the p.a */
-    		Integer currentPCInteger=
-    			new Integer(z80.getRegPair(Z80.PC) & 0xffff);
-    		if(!profilingMap.containsKey(currentPCInteger)) {
-    			ProfileNode node=new ProfileNode();
-    			profilingMap.put(currentPCInteger, node);
-    		}
-    		
-    		/*
-    		 * Here we can make sure (if the virtual machine has not bugged),
-    		 * that we obtain profile nodes for both previous and current
-    		 * addresses.
-    		 */
-    		ProfileNode prevNode=profilingMap.get(previousPCInteger);
-    		ProfileNode currNode=profilingMap.get(currentPCInteger);
-    		
-    		currNode.density++;
-
-    		/* Check whether c. PC is succ. of p. PC, if not, add it */
-    		if(!prevNode.successors.contains(currNode)) {
-    			prevNode.successors.add(currNode);
-    		}
-    		
-    		/* Check whether p. PC is predec. of c. PC, if not, add it */
-    		if(!currNode.predecessors.contains(prevNode)) {
-    			currNode.predecessors.add(prevNode);
-    		}
+    		profilingMap[currentPC].density++;
+    		gui.addCommandRow(currentPC);
+    		previousPC=currentPC;
     	}
     }
     
@@ -261,11 +217,6 @@ public class SpectrumZ80Clock implements Runnable {
     		}
     	}
 
-    	/*
-    	 * The previous value of PC is stored to enable collecting of
-    	 * call graph information.
-    	 */
-    	previousPC=z80.getRegPair(Z80.PC) & 0xffff;
     	z80.executeNextCommand();
     }
     
@@ -338,7 +289,7 @@ public class SpectrumZ80Clock implements Runnable {
 }
 
 class ProfileNode {
-	long address=-1;
+	long density=0L;
 	AddressList predecessors, successors;
 	
 	void addPredecessor(int address) {
