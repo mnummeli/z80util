@@ -173,7 +173,6 @@ public class SpectrumZ80Clock implements Runnable {
     			profilingMap[currentPC]=new ProfileNode();
     		}
     		profilingMap[currentPC].density++;
-    		gui.addCommandRow(currentPC);
     		previousPC=currentPC;
     	}
     }

@@ -21,7 +21,7 @@
 
 package org.mn.z80util.disassembler;
 
-public final class DisasmResult {
+public final class DisasmResult implements Comparable<DisasmResult> {
 
 	public DisasmResult(int startAddr, int bytesRead, String hexDigits,
 			String command) {
@@ -49,5 +49,15 @@ public final class DisasmResult {
 	private String command;
 	public String getCommand() {
 		return command;
+	}
+
+	public int compareTo(DisasmResult dar) {
+		if(this.startAddr < dar.getStartAddr()) {
+			return -1;
+		} else if(this.startAddr == dar.getStartAddr()) {
+			return 0;
+		} else {
+			return 1;
+		}
 	}
 }

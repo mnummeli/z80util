@@ -255,24 +255,34 @@ public class SpectrumGUI {
 	 * @param address	New command row
 	 */
 	public void addCommandRow(int address) {
+		boolean existsAlready=false;
+		
 		LinkedList<DisasmResult> tableContents=
 			debuggerTableModel.getCommandListing();
-		
-		/* Check that the command is not already here? */
+
 		for(int i=0;i<tableContents.size();i++) {
 			if((tableContents.get(i).getStartAddr() & 0xffff)==
 				(address&0xffff)) {
-				table.setRowSelectionInterval(i,i);
-				return;
+				existsAlready=true;
 			}
 		}
-		byte[] memory=ula.getMemory();
-		DisasmResult dar=Disassembler.disassemble(memory,(short)address);
-		tableContents.add(dar);
-		LOG.debug("Disassembler command added to table.");
-		int i=tableContents.size()-1;
-		table.setRowSelectionInterval(i,i);
-		debuggerTableModel.fireTableStructureChanged();
+
+		if(!existsAlready) {
+			byte[] memory=ula.getMemory();
+			DisasmResult dar=Disassembler.disassemble(memory,(short)address);
+			tableContents.add(dar);
+			Collections.sort(tableContents);
+			LOG.debug("Disassembler command added to table.");
+			debuggerTableModel.fireTableStructureChanged();
+		}
+
+		for(int i=0;i<tableContents.size();i++) {
+			if((tableContents.get(i).getStartAddr() & 0xffff)==
+				(z80.getRegPair(Z80.PC) & 0xffff)) {
+				table.setSelectionBackground(Color.CYAN);
+				table.setRowSelectionInterval(i,i);
+			}
+		}
 	}
 	
 	/**
