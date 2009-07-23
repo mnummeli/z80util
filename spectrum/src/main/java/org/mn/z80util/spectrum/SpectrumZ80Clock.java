@@ -168,12 +168,19 @@ public class SpectrumZ80Clock implements Runnable {
     		endProfiling=false;
     		profilingOn=false;
 
-    		/* TODO: Profiling information writing routines, temporary! */
+    		/* TODO: This is buggy.
     		Set<Map.Entry<Integer,ProfileNode>> addresses=profilingMap.entrySet();
-    		Iterator iter=addresses.iterator();
+    		Iterator<Map.Entry<Integer,ProfileNode>> iter=addresses.iterator();
     		while(iter.hasNext()) {
-    			System.out.println(iter.next());
+    			Map.Entry<Integer,ProfileNode> entry=iter.next();
+    			int addr=entry.getKey().intValue();
+    			System.out.println("Command address: "+Hex.intToHex4(addr));
+    			System.out.println("Successors: ");
+    			Iterator<ProfileNode> iter2=entry.getValue().successors.iterator();
+    			while(iter2.hasNext()) {
+    			}
     		}
+    		*/
     		
     	} else if(profilingOn) {
     		
@@ -200,9 +207,18 @@ public class SpectrumZ80Clock implements Runnable {
     		 */
     		ProfileNode prevNode=profilingMap.get(previousPCInteger);
     		ProfileNode currNode=profilingMap.get(currentPCInteger);
+    		
+    		currNode.density++;
 
     		/* Check whether c. PC is succ. of p. PC, if not, add it */
+    		if(!prevNode.successors.contains(currNode)) {
+    			prevNode.successors.add(currNode);
+    		}
+    		
     		/* Check whether p. PC is predec. of c. PC, if not, add it */
+    		if(!currNode.predecessors.contains(prevNode)) {
+    			currNode.predecessors.add(prevNode);
+    		}
     	}
     }
     
@@ -327,7 +343,7 @@ class ProfileNode {
 		predecessors=new LinkedList<ProfileNode>();
 	}
 	
-	int density=0;
+	long density=0L;
 	LinkedList<ProfileNode> successors;
 	LinkedList<ProfileNode> predecessors;
 }
