@@ -163,16 +163,33 @@ public class SpectrumZ80Clock implements Runnable {
     		/* Print or offer to save the profile */
     		for(int i=0;i<0x10000;i++) {
     			if(profilingMap[i]!=null) {
-    				System.out.println(Hex.intToHex4(i)+" : "+profilingMap[i].density);
+    				System.out.println("\n"+Hex.intToHex4(i)+" : "+profilingMap[i].density);
+    				System.out.println("Predecessors: ");
+    				Iterator iter=profilingMap[i].predecessors.iterator();
+    				while(iter.hasNext()) {
+    					int n=((Integer)(iter.next())).intValue();
+    					System.out.print(Hex.intToHex4(n)+" ");
+    				}
+    				System.out.println("\nSuccessors: ");
+    				iter=profilingMap[i].successors.iterator();
+    				while(iter.hasNext()) {
+    					int n=((Integer)(iter.next())).intValue();
+    					System.out.print(Hex.intToHex4(n)+" ");
+    				}
+    				System.out.println();
     			}
     		}
     		
     	} else if(profilingOn) {
-    		int currentPC=z80.getRegPair(Z80.PC) & 0xffff;
+    		currentPC=z80.getRegPair(Z80.PC) & 0xffff;
     		if(profilingMap[currentPC] == null) {
     			profilingMap[currentPC]=new ProfileNode();
     		}
     		profilingMap[currentPC].density++;
+    		if(previousPC >= 0) {
+    			profilingMap[currentPC].addPredecessor(previousPC);
+    			profilingMap[previousPC].addSuccessor(currentPC);
+    		}
     		previousPC=currentPC;
     	}
     }
@@ -289,55 +306,13 @@ public class SpectrumZ80Clock implements Runnable {
 
 class ProfileNode {
 	long density=0L;
-	AddressList predecessors, successors;
+	TreeSet predecessors=new TreeSet(), successors=new TreeSet();
 	
 	void addPredecessor(int address) {
-		if(predecessors==null) {
-			predecessors=new AddressList(address);
-		} else {
-			predecessors.add(address);
-		}
+		predecessors.add(address);
 	}
 	
 	void addSuccessor(int address) {
-		if(successors==null) {
-			successors=new AddressList(address);
-		} else {
-			successors.add(address);
-		}
-	}	
-}
-
-class AddressList {
-	int length=0;
-	int address;
-	AddressList nextAddress;
-	
-	AddressList(int address) {
-		this.address=address;
-	}
-	
-	void add(int address) {
-		AddressList current=this;
-		AddressList next;
-		do {
-			next=current.nextAddress;
-		} while(next!=null);
-		
-		current.nextAddress=new AddressList(address);
-		length++;
-	}
-	
-	int[] toIntArray() {
-		int[] retval=new int[length];
-		AddressList current=this;
-		for(int i=0;i<length;i++) {
-			retval[i]=current.address;
-			current=current.nextAddress;
-			if(current==null) {
-				break;
-			}
-		}
-		return retval;
+		successors.add(address);
 	}
 }
