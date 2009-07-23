@@ -162,7 +162,7 @@ public class SpectrumZ80Clock implements Runnable {
     		startProfiling=false;
     		profilingOn=true;
     		previousPC=-1;
-    		profilingMap=new TreeMap<Integer,ProfileNode>();
+    		ProfileNode[] profilingMap=new ProfileNode[0x10000];
     	} else if(endProfiling) {
     		LOG.info("Ending profiling.");
     		endProfiling=false;
@@ -338,12 +338,56 @@ public class SpectrumZ80Clock implements Runnable {
 }
 
 class ProfileNode {
-	ProfileNode() {
-		successors=new LinkedList<ProfileNode>();
-		predecessors=new LinkedList<ProfileNode>();
+	long address=-1;
+	AddressList predecessors, successors;
+	
+	void addPredecessor(int address) {
+		if(predecessors==null) {
+			predecessors=new AddressList(address);
+		} else {
+			predecessors.add(address);
+		}
 	}
 	
-	long density=0L;
-	LinkedList<ProfileNode> successors;
-	LinkedList<ProfileNode> predecessors;
+	void addSuccessor(int address) {
+		if(successors==null) {
+			successors=new AddressList(address);
+		} else {
+			successors.add(address);
+		}
+	}	
+}
+
+class AddressList {
+	int length=0;
+	int address;
+	AddressList nextAddress;
+	
+	AddressList(int address) {
+		this.address=address;
+	}
+	
+	void add(int address) {
+		AddressList current=this;
+		AddressList next;
+		do {
+			next=current.nextAddress;
+		} while(next!=null);
+		
+		current.nextAddress=new AddressList(address);
+		length++;
+	}
+	
+	int[] toIntArray() {
+		int[] retval=new int[length];
+		AddressList current=this;
+		for(int i=0;i<length;i++) {
+			retval[i]=current.address;
+			current=current.nextAddress;
+			if(current==null) {
+				break;
+			}
+		}
+		return retval;
+	}
 }
