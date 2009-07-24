@@ -29,6 +29,7 @@ import org.mn.z80util.z80.*;
 public class SpectrumRunningProfile {
 	private Z80 z80;
 	private ProfileNode[] profilingMap;
+	private Vector<ProfileBlock> blockMap;
 	int currentPC=-1, previousPC=-1;
 	
 	public SpectrumRunningProfile(Z80 z80) {
@@ -89,7 +90,7 @@ public class SpectrumRunningProfile {
      * As the rules are dependent from each other, one must iterate until
      * a stable state is reached.
      */
-	public void finishProfiling() {
+	public void findBlockStartsAndEnds() {
 		for(int i=0;i<0x10000;i++) {
     		if(profilingMap[i]!=null) {
     			profilingMap[i].startBlock=false;
@@ -134,6 +135,22 @@ public class SpectrumRunningProfile {
         		}
         	}
     	} while(hasChanged==true);
+	}
+	
+	public void createBlockMap() {
+		blockMap=new Vector<ProfileBlock>();
+		for(int i=0;i<0x10000;i++) {
+    		if((profilingMap[i]!=null) && profilingMap[i].startBlock) {
+    			ProfileBlock pb=new ProfileBlock();
+    			pb.predecessorsAddr=profilingMap[i].predecessors;
+    			int j;
+    			for(j=i; !profilingMap[j].endBlock; j=profilingMap[i].successors.first()) {
+    				pb.addCommandAddress(j);
+    			}
+    			pb.addCommandAddress(j);
+    			pb.successorsAddr=profilingMap[j].successors;
+    		}
+    	}
 	}
 	
 	public void report() {
