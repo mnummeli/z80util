@@ -22,13 +22,13 @@
 package org.mn.z80util.spectrum;
 
 import java.io.*;
-import java.util.*;
 
 import javax.swing.SwingUtilities;
 
 import org.apache.log4j.*;
 import org.mn.z80util.disassembler.*;
 import org.mn.z80util.z80.*;
+import org.mn.z80util.spectrum.profiling.SpectrumRunningProfile;
 import org.mn.z80util.spectrum.snapshots.*;
 
 public class SpectrumZ80Clock implements Runnable {
@@ -39,8 +39,7 @@ public class SpectrumZ80Clock implements Runnable {
     private boolean approveUpdate;
     
     /* Profiling variables */
-    private int previousPC=-1, currentPC=-1;
-    private ProfileNode[] profilingMap;
+    private SpectrumRunningProfile profile;
 
     /*
      * Snapshot file types, flags and functions. These affect the processor
@@ -147,152 +146,21 @@ public class SpectrumZ80Clock implements Runnable {
 			snapshotExportFileType=NONE;
 		}
     }
-    
-    /**
-     * Prints the "raw profile" for debugging purposes.
-     */
-    private void print_raw_profile() {
-		for(int i=0;i<0x10000;i++) {
-			if(profilingMap[i]!=null) {
-				if(profilingMap[i].startBlock) {
-					System.out.println("START BLOCK: ");
-				}
-				if(profilingMap[i].endBlock) {
-					System.out.println("END BLOCK: ");
-				}
-				System.out.println(Hex.intToHex4(i)+" : "+profilingMap[i].density);
-				System.out.println("Predecessors: ");
-				Iterator iter=profilingMap[i].predecessors.iterator();
-				while(iter.hasNext()) {
-					int n=((Integer)(iter.next())).intValue();
-					System.out.print(Hex.intToHex4(n)+" ");
-				}
-				System.out.println("\nSuccessors: ");
-				iter=profilingMap[i].successors.iterator();
-				while(iter.hasNext()) {
-					int n=((Integer)(iter.next())).intValue();
-					System.out.print(Hex.intToHex4(n)+" ");
-				}
-				System.out.println("\n-----\n");
-			}
-		}
-    }
-    
-    /**
-     * Iterates the start and end blocks in profile array. The algorithm is:
-     * 
-     * An existing profile node is a <b>start block node</b> if and only if:
-     * <ul>
-     * 	 <li>its address is 38h; or</li>
-     *   <li>its predecessor count differs from one; or</li>
-     *   <li>it has a predecessor with higher or equal address than its own
-     *     address; or</li>
-     *   <li>it has a predecessor which is an <i>end block node</i></li>
-     * </ul>
-     * 
-     * An existing profile node is an <b>end block node</b> if and only if:
-     * <ul>
-     *   <li>its address is 52h; or</li>
-     *   <li>its successor count differs from one; or</li>
-     *   <li>it has a successor with higher or equal address than its own
-     *     address; or</li>
-     *   <li>it has a successor which is a <i>start block node</i></li>
-     * </ul>
-     * 
-     * As the rules are dependent from each other, one must iterate until
-     * a stable state is reached.
-     */
-    private void markStartEndBlocks() {
-
-    	for(int i=0;i<0x10000;i++) {
-    		if(profilingMap[i]!=null) {
-    			profilingMap[i].startBlock=false;
-    			profilingMap[i].endBlock=false;
-    		}
-    	}
-    	
-    	boolean hasChanged;
-    	do {
-    		hasChanged=false;
-    		for(int i=0;i<0x10000;i++) {
-        		if(profilingMap[i]!=null) {
-        			if(!profilingMap[i].startBlock) {
-        				if((i==0x38)||
-        						(profilingMap[i].predecessors.size()>1)) {
-            				profilingMap[i].startBlock=true;
-            				hasChanged=true;
-            			}
-        				for(Object addrObj : profilingMap[i].predecessors) {
-            				int addr=((Integer)addrObj).intValue();
-            				if((addr >= i) || (profilingMap[addr].endBlock)) {
-            					profilingMap[i].startBlock=true;
-                				hasChanged=true;
-            				}
-            			}
-        			}
-        			
-        			if(!profilingMap[i].endBlock) {
-        				if((i==0x52)||
-        						(profilingMap[i].successors.size()>1)) {
-        					profilingMap[i].endBlock=true;
-        					hasChanged=true;
-        				}
-        				for(Object addrObj : profilingMap[i].successors) {
-        					int addr=((Integer)addrObj).intValue();
-        					if((addr <= i) || (profilingMap[addr].startBlock)) {
-        						profilingMap[i].endBlock=true;
-        						hasChanged=true;
-        					}
-        				}
-        			}
-        		}
-        	}
-    	} while(hasChanged==true);
-    }
-    
-    /**
-     * Collects profiling data to profilingMap.
-     * The following categories are collected:
-     * 
-     * <ul>
-     * 	 <li>command execution density per address</li>
-     *   <li>command predecessors, 52h is blacklisted, as it is IM 1
-     *   interrupt return command address in Spectrum</li>
-     *   <li>command successors, 38h is blacklisted, as it is IM 1
-     *   interrupt entry address</li>
-     * </ul>
-     */
-    private void collect_profiling_data() {
-    	currentPC=z80.getRegPair(Z80.PC) & 0xffff;
-		if(profilingMap[currentPC] == null) {
-			profilingMap[currentPC]=new ProfileNode();
-		}
-		profilingMap[currentPC].density++;
-		
-		/* Blacklist mode 1 interrupts (entry and return) */
-		if((previousPC >= 0) && (previousPC != 0x52) &&
-				(currentPC != 0x38)) {
-			profilingMap[currentPC].addPredecessor(previousPC);
-			profilingMap[previousPC].addSuccessor(currentPC);
-		}
-		previousPC=currentPC;
-    }
 
     private void profilingTrap() {
     	if(startProfiling) {
     		LOG.info("Starting profiling.");
     		startProfiling=false;
     		profilingOn=true;
-    		previousPC=-1;
-    		profilingMap=new ProfileNode[0x10000];
+    		profile=new SpectrumRunningProfile(z80);
     	} else if(endProfiling) {
     		LOG.info("Ending profiling.");
     		endProfiling=false;
     		profilingOn=false;
-    		markStartEndBlocks();
-    		print_raw_profile();
+    		profile.finishProfiling();
+    		profile.report();
     	} else if(profilingOn) {
-    		collect_profiling_data();
+    		profile.collectProfilingData();
     	}
     }
     
@@ -404,19 +272,4 @@ public class SpectrumZ80Clock implements Runnable {
         	processorInterruptPeriod();
         }
     }
-}
-
-class ProfileNode {
-	boolean startBlock=false, endBlock=false;
-	
-	long density=0L;
-	TreeSet predecessors=new TreeSet(), successors=new TreeSet();
-	
-	void addPredecessor(int address) {
-		predecessors.add(address);
-	}
-	
-	void addSuccessor(int address) {
-		successors.add(address);
-	}
 }
