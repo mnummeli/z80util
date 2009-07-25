@@ -159,6 +159,8 @@ public class SpectrumZ80Clock implements Runnable {
     		profilingOn=false;
     		profile.findBlockStartsAndEnds();
     		profile.report();
+    		// profile.createBlockMap();
+    		// profile.reportBlocks();
     	} else if(profilingOn) {
     		profile.collectProfilingData();
     	}

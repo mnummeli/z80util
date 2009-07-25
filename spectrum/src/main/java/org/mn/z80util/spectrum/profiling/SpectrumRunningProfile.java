@@ -23,10 +23,13 @@ package org.mn.z80util.spectrum.profiling;
 
 import java.util.*;
 
+import org.apache.log4j.Logger;
 import org.mn.z80util.disassembler.*;
 import org.mn.z80util.z80.*;
 
 public class SpectrumRunningProfile {
+	private Logger LOG=Logger.getLogger(SpectrumRunningProfile.class);
+	
 	private Z80 z80;
 	private ProfileNode[] profilingMap;
 	private Vector<ProfileBlock> blockMap;
@@ -137,18 +140,23 @@ public class SpectrumRunningProfile {
     	} while(hasChanged==true);
 	}
 	
+	// TODO: this is buggy
 	public void createBlockMap() {
 		blockMap=new Vector<ProfileBlock>();
 		for(int i=0;i<0x10000;i++) {
     		if((profilingMap[i]!=null) && profilingMap[i].startBlock) {
+    			LOG.debug("Start block: "+Hex.intToHex4(i));
     			ProfileBlock pb=new ProfileBlock();
     			pb.predecessorsAddr=profilingMap[i].predecessors;
     			int j;
     			for(j=i; !profilingMap[j].endBlock; j=profilingMap[i].successors.first()) {
+    				LOG.debug("Adding address: "+Hex.intToHex4(j));
     				pb.addCommandAddress(j);
     			}
+    			LOG.debug("End block: "+Hex.intToHex4(j));
     			pb.addCommandAddress(j);
     			pb.successorsAddr=profilingMap[j].successors;
+    			blockMap.add(pb);
     		}
     	}
 	}
@@ -177,6 +185,13 @@ public class SpectrumRunningProfile {
 				}
 				System.out.println("\n-----\n");
 			}
+		}
+	}
+	
+	public void reportBlocks() {
+		System.out.println("BLOCK MAP:\n");
+		for(ProfileBlock pb : blockMap) {
+			System.out.println(pb);
 		}
 	}
 }
