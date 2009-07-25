@@ -52,9 +52,9 @@ public class SpectrumGUI {
 			"IX = ","IY = ","SP = ","PC = ","IR = "};
 	
 	private JTextField[] regFields;
-	public JTextField[] getRegFields() {
-		return regFields;
-	}
+	
+	private JPanel flagsInfoPanel, imInfoPanel, iffInfoPanel;
+	private JLabel flagsField, imField, iffField;
 	
 	private JPanel tablePanel;
 	private JTable table;
@@ -182,6 +182,25 @@ public class SpectrumGUI {
 				specRegsPanel.add(regInfoPanels[i]);
 			}
 		}
+
+		flagsInfoPanel=new JPanel();
+		flagsInfoPanel.add(new JLabel("Flags: "));
+		flagsField=new JLabel();
+		flagsInfoPanel.add(flagsField);
+		specRegsPanel.add(flagsInfoPanel);
+		
+		imInfoPanel=new JPanel();
+		imInfoPanel.add(new JLabel("IM: "));
+		imField=new JLabel();
+		imInfoPanel.add(imField);
+		specRegsPanel.add(imInfoPanel);
+		
+		iffInfoPanel=new JPanel();
+		iffInfoPanel.add(new JLabel("IFF: "));
+		iffField=new JLabel();
+		iffInfoPanel.add(iffField);
+		specRegsPanel.add(iffInfoPanel);
+		
 		regsPanel.add(normalRegsPanel,BorderLayout.WEST);
 		regsPanel.add(altRegsPanel,BorderLayout.EAST);
 		regsPanel.add(specRegsPanel,BorderLayout.SOUTH);
@@ -246,6 +265,21 @@ public class SpectrumGUI {
 		for(int i=0;i<13;i++) {
 			regFields[i].setText(Hex.intToHex4(z80.getRegPair(i)));
 		}
+		
+		String flags="SZ5H3PNC", tmp="";
+		int f=z80.getReg(Z80.F) & 0xff;
+		for(int i=7;i>=0;i--) {
+			if((f & (1<<i)) != 0) {
+				tmp+=flags.charAt(7-i);
+			} else {
+				tmp+="-";
+			}
+		}
+		flagsField.setText(tmp);
+		
+		imField.setText(""+((z80.getReg(Z80.IM_IFF) & 0xc) >> 2));
+		String[] ifdesc={"DI","NMI/IFF1","NMI/IFF2","EI"};
+		iffField.setText(ifdesc[z80.getReg(Z80.IM_IFF) & 3]);
 	}
 	
 	/**
