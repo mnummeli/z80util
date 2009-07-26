@@ -172,6 +172,21 @@ public class SpectrumRunningProfile {
 		}
 	}
 	
+	/**
+	 * Outputs a profiler row consisting of command description and density.
+	 *
+	 * @param memory	The Spectrum memory
+	 * @param addr		The command address
+	 */
+	private void outputRow(byte[] memory, short addr) {
+		DisasmResult dar=Disassembler.disassemble(memory,addr);
+		System.out.format("%-4s : %-14s %-20s : %15d\n", Hex.intToHex4(addr & 0xffff),
+				dar.getHexDigits(), dar.getCommand(),profilingMap[addr].density);
+	}
+	
+	/**
+	 * Lists the profiler blocks to standard output.
+	 */
 	public void reportBlocks() {
 		byte[] memory=ula.getMemory();
 		System.out.println("BLOCK MAP:");
@@ -187,14 +202,10 @@ public class SpectrumRunningProfile {
 				System.out.println("\n");
 				int j=i;
 				while(!profilingMap[j].endBlock) {
-					DisasmResult dar=Disassembler.disassemble(memory,(short)j);
-					System.out.format("%-4s : %-14s %-20s : %15d\n", Hex.intToHex4(j & 0xffff),
-							dar.getHexDigits(), dar.getCommand(),profilingMap[j].density);
+					outputRow(memory,(short)j);
 					j=profilingMap[j].successors.first();
 				}
-				DisasmResult dar=Disassembler.disassemble(memory,(short)j);
-				System.out.format("%-4s : %-14s %-20s : %15d\n", Hex.intToHex4(j & 0xffff),
-						dar.getHexDigits(), dar.getCommand(),profilingMap[j].density);
+				outputRow(memory,(short)j);
 				System.out.println("\nEND BLOCK: ");
 				System.out.println("Successors: ");
 				iter=profilingMap[j].successors.iterator();
