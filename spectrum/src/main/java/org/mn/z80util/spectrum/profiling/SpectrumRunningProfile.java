@@ -181,7 +181,7 @@ public class SpectrumRunningProfile {
 	private void outputRow(byte[] memory, short addr) {
 		DisasmResult dar=Disassembler.disassemble(memory,addr);
 		System.out.format("%-4s : %-14s %-20s : %15d\n", Hex.intToHex4(addr & 0xffff),
-				dar.getHexDigits(), dar.getCommand(),profilingMap[addr].density);
+				dar.getHexDigits(), dar.getCommand(),profilingMap[addr & 0xffff].density);
 	}
 	
 	/**
