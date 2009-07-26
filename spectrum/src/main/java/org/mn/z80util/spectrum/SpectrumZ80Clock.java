@@ -152,15 +152,14 @@ public class SpectrumZ80Clock implements Runnable {
     		LOG.info("Starting profiling.");
     		startProfiling=false;
     		profilingOn=true;
-    		profile=new SpectrumRunningProfile(z80);
+    		profile=new SpectrumRunningProfile(z80,ula);
     	} else if(endProfiling) {
     		LOG.info("Ending profiling.");
     		endProfiling=false;
     		profilingOn=false;
     		profile.findBlockStartsAndEnds();
-    		profile.report();
-    		// profile.createBlockMap();
-    		// profile.reportBlocks();
+    		// profile.report();
+    		profile.reportBlocks();
     	} else if(profilingOn) {
     		profile.collectProfilingData();
     	}
@@ -178,7 +177,7 @@ public class SpectrumZ80Clock implements Runnable {
     		DisasmResult dar=Disassembler.disassemble(memory,pc);
     		String cmdString=Hex.intToHex4(pc & 0xffff)+" "+dar.getHexDigits()+
     		dar.getCommand();
-    		LOG.debug(cmdString);		
+    		LOG.debug(cmdString);
     		gui.addCommandRow(pc);
     	}
 
