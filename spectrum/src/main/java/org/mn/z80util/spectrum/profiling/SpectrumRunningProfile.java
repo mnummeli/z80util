@@ -21,10 +21,11 @@
 
 package org.mn.z80util.spectrum.profiling;
 
+import java.io.*;
 import java.util.*;
+import javax.swing.*;
 
 import org.apache.log4j.Logger;
-import org.mn.z80util.disassembler.*;
 import org.mn.z80util.spectrum.*;
 import org.mn.z80util.z80.*;
 
@@ -98,6 +99,8 @@ public class SpectrumRunningProfile {
      * a stable state is reached.
      */
 	public void findBlockStartsAndEnds() {
+		LOG.info("Constructing profiling block start and endpoints.");
+		
 		for(int i=0;i<0x10000;i++) {
     		if(profilingMap[i]!=null) {
     			profilingMap[i].startBlock=false;
@@ -145,6 +148,9 @@ public class SpectrumRunningProfile {
 	}
 	
 	public void createBlocks() {
+		LOG.info("Collecting profiling blocks.");
+		int count=0;
+		
 		blockMap=new Vector<ProfileBlock>();
 		for(int i=0;i<0x10000;i++) {
 			if((profilingMap[i]!=null) &&
@@ -160,13 +166,31 @@ public class SpectrumRunningProfile {
 				pb.commandAddresses.add(j);
 				pb.successors=profilingMap[j].successors;
 				blockMap.add(pb);
+				count++;
 			}
 		}
+		
+		LOG.info(count+" profiling blocks added.");
+		Collections.sort(blockMap);
+		LOG.info("Profiling information sorted according to entry frequency.");
 	}
 	
 	public void reportBlocks() {
-		for(ProfileBlock pb : blockMap) {
-			System.out.println(pb);
-		}
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				JFileChooser chooser = new JFileChooser();
+				int returnVal = chooser.showSaveDialog(null);
+			    if(returnVal == JFileChooser.APPROVE_OPTION) {
+			    	try {
+			    		PrintStream out=new PrintStream(chooser.getSelectedFile());
+			    		for(ProfileBlock pb : blockMap) {
+							out.println(pb);
+						}
+			    	} catch (IOException e) {
+			    		LOG.warn("Unable to write profile file.");
+			    	}
+			    }
+			}
+		});
 	}
 }
