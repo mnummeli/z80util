@@ -2,27 +2,27 @@ package org.mn.z80util.spectrum.profiling;
 
 import java.util.*;
 
-import org.mn.z80util.disassembler.Hex;
+import org.mn.z80util.disassembler.*;
+import org.mn.z80util.spectrum.*;
 
 public class ProfileBlock implements Comparable<ProfileBlock> {
-	long maxDensity=0L;
+	SpectrumULA ula;
+	long entryDensity;
+	TreeSet<Integer> predecessors, successors;
+	Vector<Integer> commandAddresses;
 	
-	Vector<Integer> commandAddresses=new Vector<Integer>();
-	
-	TreeSet<Integer> predecessorsAddr=new TreeSet<Integer>(),
-		successorsAddr=new TreeSet<Integer>();
-
-	TreeSet<Integer> predecessorsInd=new TreeSet<Integer>(),
-	successorsInd=new TreeSet<Integer>();
-	
-	void addCommandAddress(int address) {
-		commandAddresses.add(address);
+	public ProfileBlock(SpectrumULA ula) {
+		this.ula=ula;
+		entryDensity=0L;
+		predecessors=new TreeSet<Integer>();
+		commandAddresses=new Vector<Integer>();
+		successors=new TreeSet<Integer>();
 	}
 
 	public int compareTo(ProfileBlock pb) {
-		if (this.maxDensity < pb.maxDensity) {
+		if (this.entryDensity < pb.entryDensity) {
 			return 1;
-		} else if (this.maxDensity == pb.maxDensity) {
+		} else if (this.entryDensity == pb.entryDensity) {
 			return 0;
 		} else {
 			return -1;
@@ -30,18 +30,25 @@ public class ProfileBlock implements Comparable<ProfileBlock> {
 	}
 	
 	public String toString() {
-		String retval="BLOCK:\nPredecessors: ";
-		for(Integer i : predecessorsAddr) {
+		byte[] memory=ula.getMemory();
+		String retval="\nPROGRAM BLOCK:\n";
+		retval+="Density: "+entryDensity+"\n";
+		retval+="Predecessors: ";
+		for(int i : predecessors) {
 			retval+=Hex.intToHex4(i)+" ";
 		}
-		retval+="Commands:\n";
-		for(Integer i : commandAddresses) {
-			retval+=(Hex.intToHex4(i)+"\n");
+		retval+="\n\n";
+		for(int i : commandAddresses) {
+			DisasmResult dar=Disassembler.disassemble(memory,(short)i);
+			retval+=String.format("%-4s : %-14s %-20s\n",
+					Hex.intToHex4(i & 0xffff),
+					dar.getHexDigits(), dar.getCommand());
 		}
-		retval+="Successors: ";
-		for(Integer i : successorsAddr) {
+		retval+="\nSuccessors: ";
+		for(int i : successors) {
 			retval+=Hex.intToHex4(i)+" ";
 		}
-		return retval+"\n\n";
+		retval+="\n\n----------";
+		return retval;
 	}
 }

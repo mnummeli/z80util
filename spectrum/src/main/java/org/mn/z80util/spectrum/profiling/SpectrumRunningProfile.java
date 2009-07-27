@@ -144,77 +144,29 @@ public class SpectrumRunningProfile {
     	} while(hasChanged==true);
 	}
 	
-	/* TODO: for debugging purposes, not currently used. */
-	public void report() {
+	public void createBlocks() {
+		blockMap=new Vector<ProfileBlock>();
 		for(int i=0;i<0x10000;i++) {
-			if(profilingMap[i]!=null) {
-				if(profilingMap[i].startBlock) {
-					System.out.println("START BLOCK: ");
+			if((profilingMap[i]!=null) &&
+					(profilingMap[i].startBlock)) {
+				ProfileBlock pb=new ProfileBlock(ula);
+				pb.entryDensity=profilingMap[i].density;
+				pb.predecessors=profilingMap[i].predecessors;
+				int j=i;
+				while(!profilingMap[j].endBlock) {
+					pb.commandAddresses.add(j);
+					j=profilingMap[j].successors.first();
 				}
-				if(profilingMap[i].endBlock) {
-					System.out.println("END BLOCK: ");
-				}
-				System.out.println(Hex.intToHex4(i)+" : "+profilingMap[i].density);
-				System.out.println("Predecessors: ");
-				Iterator<Integer> iter=profilingMap[i].predecessors.iterator();
-				while(iter.hasNext()) {
-					int n=((Integer)(iter.next())).intValue();
-					System.out.print(Hex.intToHex4(n)+" ");
-				}
-				System.out.println("\nSuccessors: ");
-				iter=profilingMap[i].successors.iterator();
-				while(iter.hasNext()) {
-					int n=((Integer)(iter.next())).intValue();
-					System.out.print(Hex.intToHex4(n)+" ");
-				}
-				System.out.println("\n-----\n");
+				pb.commandAddresses.add(j);
+				pb.successors=profilingMap[j].successors;
+				blockMap.add(pb);
 			}
 		}
 	}
 	
-	/**
-	 * Outputs a profiler row consisting of command description and density.
-	 *
-	 * @param memory	The Spectrum memory
-	 * @param addr		The command address
-	 */
-	private void outputRow(byte[] memory, short addr) {
-		DisasmResult dar=Disassembler.disassemble(memory,addr);
-		System.out.format("%-4s : %-14s %-20s : %15d\n", Hex.intToHex4(addr & 0xffff),
-				dar.getHexDigits(), dar.getCommand(),profilingMap[addr & 0xffff].density);
-	}
-	
-	/**
-	 * Lists the profiler blocks to standard output.
-	 */
 	public void reportBlocks() {
-		byte[] memory=ula.getMemory();
-		System.out.println("BLOCK MAP:");
-		for(int i=0;i<0x10000;i++) {
-			if((profilingMap[i]!=null) && (profilingMap[i].startBlock)) {
-				System.out.println("\nSTART BLOCK: ");
-				System.out.println("Predecessors: ");
-				Iterator<Integer> iter=profilingMap[i].predecessors.iterator();
-				while(iter.hasNext()) {
-					int n=((Integer)(iter.next())).intValue();
-					System.out.print(Hex.intToHex4(n)+" ");
-				}
-				System.out.println("\n");
-				int j=i;
-				while(!profilingMap[j].endBlock) {
-					outputRow(memory,(short)j);
-					j=profilingMap[j].successors.first();
-				}
-				outputRow(memory,(short)j);
-				System.out.println("\nEND BLOCK: ");
-				System.out.println("Successors: ");
-				iter=profilingMap[j].successors.iterator();
-				while(iter.hasNext()) {
-					int n=((Integer)(iter.next())).intValue();
-					System.out.print(Hex.intToHex4(n)+" ");
-				}
-				System.out.println("\n\n----------");
-			}
+		for(ProfileBlock pb : blockMap) {
+			System.out.println(pb);
 		}
 	}
 }
