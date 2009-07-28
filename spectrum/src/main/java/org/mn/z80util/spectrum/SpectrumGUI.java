@@ -41,7 +41,11 @@ public class SpectrumGUI {
 	private JMenuBar GUIFrameMenuBar;
 	private JMenu fileMenu, actionMenu, viewMenu, helpMenu;
 	private JMenuItem loadItem, saveItem, exitItem, stepItem, continueItem,
-		profilingItem, debuggerItem, aboutItem;
+		profilingItem, saveProfileItem, debuggerItem, aboutItem;
+	
+	public JMenuItem getProfilingItem() {
+		return profilingItem;
+	}
 	
 	/* The GUI components (debugger) */
 	private JFrame debuggerFrame;
@@ -136,9 +140,13 @@ public class SpectrumGUI {
 		continueItem=new JMenuItem("Continue", KeyEvent.VK_C);
 		continueItem.addActionListener(controller);
 		actionMenu.add(continueItem);
-		profilingItem=new JMenuItem("Profiling", KeyEvent.VK_P);
+		profilingItem=new JMenuItem("Start/end profiling", KeyEvent.VK_P);
+		profilingItem.setActionCommand("Profiling");
 		profilingItem.addActionListener(controller);
 		actionMenu.add(profilingItem);
+		saveProfileItem=new JMenuItem("Save profile",null);
+		saveProfileItem.addActionListener(controller);
+		actionMenu.add(saveProfileItem);
 		GUIFrameMenuBar.add(actionMenu);
 		
 		/* View menu */

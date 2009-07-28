@@ -40,6 +40,9 @@ public class SpectrumZ80Clock implements Runnable {
     
     /* Profiling variables */
     private SpectrumRunningProfile profile;
+    public SpectrumRunningProfile getProfile() {
+    	return profile;
+    }
 
     /*
      * Snapshot file types, flags and functions. These affect the processor
@@ -159,7 +162,7 @@ public class SpectrumZ80Clock implements Runnable {
     		profilingOn=false;
     		profile.findBlockStartsAndEnds();
     		profile.createBlocks();
-    		profile.reportBlocks();
+    		profile.translatePredecessorsAndSuccessors();
     	} else if(profilingOn) {
     		profile.collectProfilingData();
     	}

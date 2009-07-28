@@ -9,6 +9,14 @@ public class ProfileBlock implements Comparable<ProfileBlock> {
 	SpectrumULA ula;
 	long entryDensity;
 	TreeSet<Integer> predecessors, successors;
+	
+	/**
+	 * Another set of predecessors and successors, which should be in some
+	 * cases a translation of predecessor and successor addresses into
+	 * their order numbers in a program block array.
+	 */
+	TreeSet<Integer> predecessorNumbers, successorNumbers;
+	
 	Vector<Integer> commandAddresses;
 	
 	public ProfileBlock(SpectrumULA ula) {
@@ -17,6 +25,14 @@ public class ProfileBlock implements Comparable<ProfileBlock> {
 		predecessors=new TreeSet<Integer>();
 		commandAddresses=new Vector<Integer>();
 		successors=new TreeSet<Integer>();
+	}
+	
+	public int getFirstCommandAddress() {
+		return commandAddresses.firstElement() & 0xffff;
+	}
+	
+	public int getLastCommandAddress() {
+		return commandAddresses.lastElement() & 0xffff;
 	}
 
 	public int compareTo(ProfileBlock pb) {
@@ -31,9 +47,15 @@ public class ProfileBlock implements Comparable<ProfileBlock> {
 	
 	public String toString() {
 		byte[] memory=ula.getMemory();
-		String retval="\nPROGRAM BLOCK:\n";
-		retval+="Density: "+entryDensity+"\n";
-		retval+="Predecessors: ";
+		String retval="Density: "+entryDensity+"\n";
+		retval+="Logarithm of density: "+Math.log(entryDensity)+"\n";
+		if(predecessorNumbers != null) {
+			retval+="Predecessors numbers: ";
+			for(int i : predecessorNumbers) {
+				retval+=i+" ";
+			}
+		}
+		retval+="\nPredecessors: ";
 		for(int i : predecessors) {
 			retval+=Hex.intToHex4(i)+" ";
 		}
@@ -44,11 +66,17 @@ public class ProfileBlock implements Comparable<ProfileBlock> {
 					Hex.intToHex4(i & 0xffff),
 					dar.getHexDigits(), dar.getCommand());
 		}
+		if(successorNumbers != null) {
+			retval+="\nSuccessor numbers: ";
+			for(int i : successorNumbers) {
+				retval+=i+" ";
+			}
+		}
 		retval+="\nSuccessors: ";
 		for(int i : successors) {
 			retval+=Hex.intToHex4(i)+" ";
 		}
-		retval+="\n\n----------";
+		retval+="\n\n----------\n";
 		return retval;
 	}
 }

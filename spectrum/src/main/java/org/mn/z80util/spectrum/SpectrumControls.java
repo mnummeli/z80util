@@ -27,6 +27,7 @@ import javax.swing.*;
 
 import org.apache.log4j.*;
 
+import org.mn.z80util.spectrum.profiling.SpectrumRunningProfile;
 import org.mn.z80util.spectrum.snapshots.Snapshots;
 
 public class SpectrumControls implements KeyListener, ActionListener {
@@ -298,6 +299,11 @@ private Logger LOG=Logger.getLogger(SpectrumControls.class);
 			}
 			synchronized(clock) {
 				clock.notifyAll();
+			}
+		} else if(e.getActionCommand().equalsIgnoreCase("Save profile")) {
+			SpectrumRunningProfile profile=clock.getProfile();
+			if(profile != null) {
+				profile.saveBlocks();
 			}
 		} else if(e.getActionCommand().equalsIgnoreCase("Debugger")) {
 			debuggerFrame.pack();

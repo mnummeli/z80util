@@ -147,6 +147,10 @@ public class SpectrumRunningProfile {
     	} while(hasChanged==true);
 	}
 	
+	/**
+	 * Creates the profiling blocks according to previously marked start and
+	 * end addresses.
+	 */
 	public void createBlocks() {
 		LOG.info("Collecting profiling blocks.");
 		int count=0;
@@ -175,7 +179,61 @@ public class SpectrumRunningProfile {
 		LOG.info("Profiling information sorted according to entry frequency.");
 	}
 	
-	public void reportBlocks() {
+	/**
+	 * When program blocks are ordered by createBlocks, map the predecessor
+	 * addresses into the block order values.
+	 * 
+	 * @param address	Address of predecessor block last command
+	 * @return			The order number in program blocks array, -1 in case of error.
+	 */
+	public int predecessorCorrespondsTo(int address) {
+		for(int i=0;i<blockMap.size();i++) {
+			ProfileBlock pb=blockMap.elementAt(i);
+			if((pb!=null) && (pb.getLastCommandAddress()==address)) {
+				return i;
+			}
+		}
+		return -1; /* Error */
+	}
+	
+	/**
+	 * When program blocks are ordered by createBlocks, map the successor
+	 * addresses into the block order values.
+	 * 
+	 * @param address	Address of successor block last command
+	 * @return			The order number in program blocks array, -1 in case of error.
+	 */
+	public int successorCorrespondsTo(int address) {
+		for(int i=0;i<blockMap.size();i++) {
+			ProfileBlock pb=blockMap.elementAt(i);
+			if((pb!=null) && (pb.getFirstCommandAddress()==address)) {
+				return i;
+			}
+		}
+		return -1; /* Error */
+	}
+	
+	/**
+	 * Translates predecessor and successor values into corresponding order
+	 * numbers in the program block array.
+	 */
+	public void translatePredecessorsAndSuccessors() {
+		for(ProfileBlock pb : blockMap) {
+			pb.predecessorNumbers=new TreeSet<Integer>();
+			pb.successorNumbers=new TreeSet<Integer>();
+			for(int i : pb.predecessors) {
+				pb.predecessorNumbers.add(predecessorCorrespondsTo(i));
+			}
+			for(int i : pb.successors) {
+				pb.successorNumbers.add(successorCorrespondsTo(i));
+			}
+		}
+	}
+	
+	/**
+	 * Saves the profiling blocks to disk.
+	 */
+	public void saveBlocks() {
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				JFileChooser chooser = new JFileChooser();
@@ -183,9 +241,11 @@ public class SpectrumRunningProfile {
 			    if(returnVal == JFileChooser.APPROVE_OPTION) {
 			    	try {
 			    		PrintStream out=new PrintStream(chooser.getSelectedFile());
-			    		for(ProfileBlock pb : blockMap) {
-							out.println(pb);
-						}
+			    		for(int i=0;i<blockMap.size();i++) {
+			    			ProfileBlock pb=blockMap.elementAt(i);
+			    			out.println("PROGRAM BLOCK: "+i);
+			    			out.println(pb);
+			    		}
 			    	} catch (IOException e) {
 			    		LOG.warn("Unable to write profile file.");
 			    	}
