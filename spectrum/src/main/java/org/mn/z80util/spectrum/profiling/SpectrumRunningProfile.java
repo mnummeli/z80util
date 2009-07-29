@@ -27,6 +27,7 @@ import javax.swing.*;
 
 import org.apache.log4j.Logger;
 import org.mn.z80util.spectrum.*;
+import org.mn.z80util.spectrum.snapshots.Snapshots;
 import org.mn.z80util.z80.*;
 
 public class SpectrumRunningProfile {
@@ -230,6 +231,37 @@ public class SpectrumRunningProfile {
 		}
 	}
 	
+	private void saveBlocksAsText(PrintStream out) {
+		for(int i=0;i<blockMap.size();i++) {
+			ProfileBlock pb=blockMap.elementAt(i);
+			out.println("PROGRAM BLOCK: "+i);
+			out.println(pb);
+		}
+	}
+	
+	private void saveBlocksAsSVGFlowChart(PrintStream out) {
+		int imageheight=blockMap.size();
+		out.println("<svg width=\"20cm\" height=\"22cm\" viewBox=\"0 -10 "+
+				10*imageheight+" "+10*imageheight+"\">");
+		for(int i=0;i<blockMap.size();i++) {
+			ProfileBlock pb=blockMap.elementAt(i);
+			for(int j : pb.successorNumbers) {
+				if(i==j) {
+					/* Tight loop (circle) */
+					out.println("<circle cx=\""+5*imageheight+"\" cy=\""+10*i+
+							"\" r=\"4\" fill=\"none\" stroke=\"black\"/>");
+				} else {
+					int cy_pre=10*i, cy_succ=10*j, cx_left=5*imageheight-5*(j-i);
+					out.println("<path d=\"M "+5*imageheight+" "+cy_pre+" C "+
+							cx_left+" "+cy_pre+" "+cx_left+" "+cy_succ+" "+
+							5*imageheight+" "+cy_succ+
+							"\" fill=\"none\" stroke=\"black\"/>");
+				}
+			}
+		}
+		out.println("</svg>");
+	}
+	
 	/**
 	 * Saves the profiling blocks to disk.
 	 */
@@ -240,11 +272,17 @@ public class SpectrumRunningProfile {
 				int returnVal = chooser.showSaveDialog(null);
 			    if(returnVal == JFileChooser.APPROVE_OPTION) {
 			    	try {
-			    		PrintStream out=new PrintStream(chooser.getSelectedFile());
-			    		for(int i=0;i<blockMap.size();i++) {
-			    			ProfileBlock pb=blockMap.elementAt(i);
-			    			out.println("PROGRAM BLOCK: "+i);
-			    			out.println(pb);
+			    		File f=chooser.getSelectedFile();
+			    		String ftype=Snapshots.fileType(f.getName());
+			    		PrintStream out=new PrintStream(f);
+			    		if(ftype.equals("svg")) {
+			    			LOG.info("Saving SVG diagram.");
+			    			saveBlocksAsSVGFlowChart(out);
+			    		} else if(ftype.equals("xml")) {
+			    			LOG.warn("Plain XML output not implemented.");
+			    		} else {
+			    			LOG.info("Defaulting to plain text output.");
+			    			saveBlocksAsText(out);
 			    		}
 			    	} catch (IOException e) {
 			    		LOG.warn("Unable to write profile file.");
