@@ -45,6 +45,31 @@ public class ProfileBlock implements Comparable<ProfileBlock> {
 		}
 	}
 	
+	/**
+	 * A helper function for determining whether this profile block is
+	 * probably innermost in a loop structure. Requires that profile blocks
+	 * are sorted according to their frequencies/densities in descending order
+	 * and that block order number of this block is provided.
+	 * 
+	 * @param orderno	Order number of this profile block
+	 * @return			True if this block has no successors or predecessors
+	 * 					with lower order number than this block has, false
+	 * 					otherwise
+	 */
+	public boolean isInnermostNode(int orderno) {
+		for(int i : predecessorNumbers) {
+			if (i<orderno) {
+				return false;
+			}
+		}
+		for(int i : successorNumbers) {
+			if (i<orderno) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
 	public String toString() {
 		byte[] memory=ula.getMemory();
 		String retval="Density: "+entryDensity+"\n";

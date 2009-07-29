@@ -245,15 +245,22 @@ public class SpectrumRunningProfile {
 				10*imageheight+" "+10*imageheight+"\">");
 		for(int i=0;i<blockMap.size();i++) {
 			ProfileBlock pb=blockMap.elementAt(i);
+			if(pb.isInnermostNode(i)) {
+				out.println("<line x1=\"0\" y1=\""+10*i+"\" x2=\""+
+						10*imageheight+"\" y2=\""+10*i+
+						"\" stroke=\"purple\"/>");
+			}
 			for(int j : pb.successorNumbers) {
 				if(i==j) {
 					/* Tight loop (circle) */
 					out.println("<circle cx=\""+5*imageheight+"\" cy=\""+10*i+
 							"\" r=\"4\" fill=\"none\" stroke=\"black\"/>");
 				} else {
-					int cy_pre=10*i, cy_succ=10*j, cx_left=5*imageheight-5*(j-i);
+					int cy_pre=10*i, cy_succ=10*j;
+					int max = j>i ? j : i;
+					int cx_edge = j>i ? 5*(imageheight-j) : 5*(imageheight+max);
 					out.println("<path d=\"M "+5*imageheight+" "+cy_pre+" C "+
-							cx_left+" "+cy_pre+" "+cx_left+" "+cy_succ+" "+
+							cx_edge+" "+cy_pre+" "+cx_edge+" "+cy_succ+" "+
 							5*imageheight+" "+cy_succ+
 							"\" fill=\"none\" stroke=\"black\"/>");
 				}
