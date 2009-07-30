@@ -35,16 +35,25 @@ public class SpectrumRunningProfile {
 	
 	private ProfileNode[] profilingMap;
 	private Vector<ProfileBlock> blockMap;
-	int currentPC=-1, previousPC=-1;
+	private int currentPC=-1, previousPC=-1;
+	private int interruptsAtStart, interruptsAtEnd;
 	
 	private Z80 z80;
 	private SpectrumULA ula;
+	private SpectrumZ80Clock clock;
 	
-	public SpectrumRunningProfile(Z80 z80, SpectrumULA ula) {
+	public SpectrumRunningProfile(Z80 z80, SpectrumULA ula,
+			SpectrumZ80Clock clock) {
 		this.z80=z80;
 		this.ula=ula;
+		this.clock=clock;
 		profilingMap=new ProfileNode[0x10000];
 		previousPC=-1;
+		this.interruptsAtStart=clock.getInterrupts();
+	}
+	
+	public double getProfilingTimeInSeconds() {
+		return (double)(interruptsAtEnd-interruptsAtStart)/50;
 	}
 
 	/**
@@ -100,6 +109,8 @@ public class SpectrumRunningProfile {
      * a stable state is reached.
      */
 	public void findBlockStartsAndEnds() {
+		interruptsAtEnd=clock.getInterrupts();
+		
 		LOG.info("Constructing profiling block start and endpoints.");
 		
 		for(int i=0;i<0x10000;i++) {
@@ -160,7 +171,7 @@ public class SpectrumRunningProfile {
 		for(int i=0;i<0x10000;i++) {
 			if((profilingMap[i]!=null) &&
 					(profilingMap[i].startBlock)) {
-				ProfileBlock pb=new ProfileBlock(ula);
+				ProfileBlock pb=new ProfileBlock(ula, this);
 				pb.entryDensity=profilingMap[i].density;
 				pb.predecessors=profilingMap[i].predecessors;
 				int j=i;
@@ -232,9 +243,17 @@ public class SpectrumRunningProfile {
 	}
 	
 	private void saveBlocksAsText(PrintStream out) {
+		out.println("Interrupts at start: "+interruptsAtStart);
+		out.println("Interrupts at end: "+interruptsAtEnd);
+		out.println("Estimated profiling time in seconds: "+
+				getProfilingTimeInSeconds()+"\n");
 		for(int i=0;i<blockMap.size();i++) {
 			ProfileBlock pb=blockMap.elementAt(i);
-			out.println("PROGRAM BLOCK: "+i);
+			if(pb.isInnermostNode(i)) {
+				out.println("INNERMOST PROGRAM BLOCK: "+i);
+			} else {
+				out.println("PROGRAM BLOCK: "+i);
+			}
 			out.println(pb);
 		}
 	}

@@ -35,6 +35,11 @@ public class SpectrumZ80Clock implements Runnable {
     private static Logger LOG=Logger.getLogger(SpectrumZ80Clock.class);
     
     private int interrupts, screenLine;
+
+    public int getInterrupts() {
+    	return interrupts;
+    }
+    
     private long startTime;
     private boolean approveUpdate;
     
@@ -155,7 +160,7 @@ public class SpectrumZ80Clock implements Runnable {
     		LOG.info("Starting profiling.");
     		startProfiling=false;
     		profilingOn=true;
-    		profile=new SpectrumRunningProfile(z80,ula);
+    		profile=new SpectrumRunningProfile(z80,ula,this);
     	} else if(endProfiling) {
     		LOG.info("Ending profiling.");
     		endProfiling=false;
