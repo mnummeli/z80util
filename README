@@ -46,7 +46,7 @@ $ mvn exec:java
 It is possible to load and save Z80 and SNA snapshots by options listed in
 the "File" menu.
 
-For further details, see index.xhtml in the doc/ subdirectory and the source code.
+For further details, see the source code.
 
 
 Mikko Nummelin <mikko.nummelin@tkk.fi>
