@@ -36,10 +36,10 @@ public class Main {
 		"Jeccy - a Sinclair ZX Spectrum 48K emulator\n"+
 		"(C) 2009, Mikko Nummelin, <mikko.nummelin@tkk.fi>\n"+
 		"Jeccy is free software and comes with ABSOLUTELY NO WARRANTY.\n";
-	
+
 	private static Logger LOG=Logger.getLogger(Main.class);
 	private static String[] args;
-	
+
 	/* Basic components */
 	private static Z80 z80;
 	private static SpectrumULA ula;
@@ -47,7 +47,7 @@ public class Main {
 	private static SpectrumScreen scr;
 	private static SpectrumControls controller;
 	private static SpectrumGUI spectrumGUI;
-	
+
 	public static void main( String[] args ) {
 		System.out.println(COPYRIGHT_NOTICE);
 		Main.args=args;
@@ -74,11 +74,11 @@ public class Main {
 		spectrumGUI.setController(controller);
 		spectrumGUI.setZ80(z80);
 		spectrumGUI.setUla(ula);
-				
+
 		/* Resets ULA and Z80 processor */
 		ula.reset();
 		z80.reset();
-				
+
 		/* Parses arguments and loads appropriate ROM and snapshots */
 		LOG.info("Parsing the arguments");
 		String ROMFileName="48.rom", Z80FileName=null, SNAFileName=null;
@@ -120,5 +120,5 @@ public class Main {
 				new Thread(clock, "Spectrum").start();
 			}
 		});
-    }
+	}
 }

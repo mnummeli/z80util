@@ -12,12 +12,12 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 	private Logger LOG=Logger.getLogger(Z80Snapshot.class);
 	private boolean isCompressed=false, isVersion2=false;
 	private int memptr;
-	
+
 	public Z80Snapshot(InputStream is) {
 		super();
 		read(is);
 	}
-	
+
 	public Z80Snapshot(String filename) {
 		super();
 		try {
@@ -26,11 +26,11 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 			LOG.warn("Z80 snapshot file "+filename+" not found.");
 		}
 	}
-	
+
 	public Z80Snapshot(Z80 z80, SpectrumULA ula) {
 		super(z80,ula);
 	}
-	
+
 	public void setV1RegisterValues(byte[] v1_header) {
 		regs[Z80.A]=v1_header[0];
 		regs[Z80.F]=v1_header[1];
@@ -66,10 +66,10 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 		regs[Z80.XL]=v1_header[25];
 		regs[Z80.XH]=v1_header[26];
 		regs[Z80.IM_IFF]=(byte)((v1_header[27] & 1) |			// IFF1
-								((v1_header[28] & 1) << 1) |	// IFF2
-								((v1_header[29] & 3) << 2));	// IM
+				((v1_header[28] & 1) << 1) |	// IFF2
+				((v1_header[29] & 3) << 2));	// IM
 	}
-	
+
 	public void getV1RegisterValues(byte[] v1_header) {
 		int IS_COMPRESSED = 0x20;
 		v1_header[0]=regs[Z80.A];
@@ -121,7 +121,7 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 		p = startAddr;
 		end = startAddr+length;
 		last_ed = false;
-		
+
 		LOG.info("Compressed block start address is: "+Hex.intToHex4(p));
 		LOG.info("Compressed block end address is: "+Hex.intToHex4(end));
 
@@ -147,7 +147,7 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 				memory[p++] = (byte)0xED;
 			}
 		}
-		
+
 		LOG.info("Memory write pointer has reached value: "+Hex.intToHex4(p));
 
 		if(hasEndSignature) {
@@ -165,7 +165,7 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 			}
 		}
 	}
-	
+
 	private void loadZ80Version2(InputStream is) {
 
 		/* Loops through pages */
@@ -192,7 +192,7 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 			 * should be replaced.
 			 */
 			int startAddr = ((pageno & 4) << 13) | ((pageno & 1) << 14) |
-				((pageno & 8) << 11);
+			((pageno & 8) << 11);
 			LOG.info("Z80 V2 page start address is: "+Hex.intToHex4(startAddr));
 
 			if(startAddr==0x0000) {
@@ -226,10 +226,10 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 		if(SwingUtilities.isEventDispatchThread()) {
 			LOG.fatal("\n  Attempted to load Z80 snapshot from event dispatch thread.\n" +
 					"This is not allowed, because it is a possibly time-consuming task\n" +
-					"and not thread safe with main emulator loop thread.");
+			"and not thread safe with main emulator loop thread.");
 			System.exit(1);
 		}
-		
+
 		byte[] v1_header=new byte[30];
 		try {
 			is.read(v1_header);
@@ -292,13 +292,13 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 	 * @return	Next byte from memory, -1 if overlapping above FFFFh.
 	 */
 	private int compr_read_byte() {
-	    if(memptr < 0x10000) {
-	    	return (memory[memptr++] & 0xff);
-	    } else {
-	    	return -1;
-	    }
+		if(memptr < 0x10000) {
+			return (memory[memptr++] & 0xff);
+		} else {
+			return -1;
+		}
 	}
-	
+
 	/**
 	 * Ported from Szeredi Miklos' Spectemu.
 	 * 
@@ -307,61 +307,61 @@ public class Z80Snapshot extends AbstractSpectrumSnapshot {
 	 * @param length			Length of target memory area
 	 */
 	private void saveCompressedBlock(OutputStream os, int startAddr, int length)
-		throws IOException {
-	    int j, c, lc, num;
-	    boolean lled,rep;
+	throws IOException {
+		int j, c, lc, num;
+		boolean lled,rep;
 
-	    memptr=startAddr;
-	    rep = false;
-	  
-	    c = compr_read_byte();
-	    lc = 0;
-	    num = 0;
+		memptr=startAddr;
+		rep = false;
 
-	    while(c >= 0) {
-	        if(lc == 0xED) lled = true;
-	        else lled = false;
+		c = compr_read_byte();
+		lc = 0;
+		num = 0;
 
-	        lc = c;
-	        c = compr_read_byte();
-	        if(c == lc && num != 255 && (!lled || rep)) {
-	            if(!rep) {
-	                num = 1;
-	                rep = true;
-	            }
-	            num++;
-	        }
-	        else {
-	            if(rep) {
-	                if(num < 5 && lc != 0xED) for(j = 0; j < num; j++)
-	                	os.write(lc);
-	                else{
-	                	os.write(0xED);
-	                	os.write(0xED);
-	                	os.write(num);
-	                	os.write(lc);
-	                    num = 0;
-	                }
-	                rep = false;
-	            }
-	            else os.write(lc);
-	        }
-	    }
+		while(c >= 0) {
+			if(lc == 0xED) lled = true;
+			else lled = false;
 
-	    os.write(0x00);
-	    os.write(0xED);
-	    os.write(0xED);
-	    os.write(0x00);
+			lc = c;
+			c = compr_read_byte();
+			if(c == lc && num != 255 && (!lled || rep)) {
+				if(!rep) {
+					num = 1;
+					rep = true;
+				}
+				num++;
+			}
+			else {
+				if(rep) {
+					if(num < 5 && lc != 0xED) for(j = 0; j < num; j++)
+						os.write(lc);
+					else{
+						os.write(0xED);
+						os.write(0xED);
+						os.write(num);
+						os.write(lc);
+						num = 0;
+					}
+					rep = false;
+				}
+				else os.write(lc);
+			}
+		}
+
+		os.write(0x00);
+		os.write(0xED);
+		os.write(0xED);
+		os.write(0x00);
 	}
 
 	public void write(OutputStream os) {
 		if(SwingUtilities.isEventDispatchThread()) {
 			LOG.fatal("\n  Attempted to save Z80 snapshot from event dispatch thread.\n" +
 					"This is not allowed, because it is a possibly time-consuming task\n" +
-					"and not thread safe with main emulator loop thread.");
+			"and not thread safe with main emulator loop thread.");
 			System.exit(1);
 		}
-		
+
 		LOG.info("Saving compressed Z80 V1 file.");
 		byte[] v1_header=new byte[30];
 		getV1RegisterValues(v1_header);
