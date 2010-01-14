@@ -45,16 +45,16 @@ import org.springframework.context.support.*;
  */
 public class MZ80TestBench implements Runnable {
 	private final static String COPYRIGHT_NOTICE=
-	"MZ80TestBench - a Z80 processor testbench.\n"+
-	"(C) 2009, Mikko Nummelin, <mikko.nummelin@tkk.fi>\n"+
-	"MZ80TestBench is free software and comes with ABSOLUTELY NO WARRANTY.";
-	
+		"MZ80TestBench - a Z80 processor testbench.\n"+
+		"(C) 2009, Mikko Nummelin, <mikko.nummelin@tkk.fi>\n"+
+		"MZ80TestBench is free software and comes with ABSOLUTELY NO WARRANTY.";
+
 	private final String[] registerName={"B","C","D","E","H","L","F","A",
 			"B'","C'","D'","E'","H'","L'","F'","A'",
 			"XH","XL","YH","YL","SPH","SPL","PCH","PCL","I","R","IM_IFF"};
-	
+
 	/* The tester GUI */
-	
+
 	private static MZ80TestBench testBench;
 	private JFrame GUI;
 
@@ -73,31 +73,31 @@ public class MZ80TestBench implements Runnable {
 
 	private JPanel imagePanel;
 	private ImageIcon img;
-	
+
 	boolean fail_this=false;
-	
+
 	/* Please remember to run this in event dispatch thread, even if you
 	 * change the program. And NEVER place Swing components in Spring application
 	 * context via XML or otherwise. */
 	private void createAndShowGUI() {
-		
+
 		// See above
 		if(!SwingUtilities.isEventDispatchThread()) {
 			System.err.println("Attempting to construct the GUI from outside "+
 					"of event dispatch thread! This is an error. Please check "+
-					"your code modifications.");
+			"your code modifications.");
 			System.exit(1);
 		}
-		
+
 		/* Initializes the GUI frame */
 		GUI=new JFrame("Mikko's Z80 Testbench - (C) Mikko Nummelin, 2009");
 		GUI.setLayout(new BorderLayout());
 		GUI.setIconImage(LogoFactory.createLogo());
 		GUI.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
+
 		leftPanel=new JPanel();
 		leftPanel.setLayout(new GridLayout(3,1));
-		
+
 		// The first processor information
 		firstProcessorPanel=new JPanel();
 		firstProcessorPanel.setLayout(new GridLayout(2,1));
@@ -106,7 +106,7 @@ public class MZ80TestBench implements Runnable {
 		firstProcessorStatus=new JLabel("-");
 		firstProcessorPanel.add(firstProcessorStatus);
 		leftPanel.add(firstProcessorPanel);
-		
+
 		// The second processor information
 		secondProcessorPanel=new JPanel();
 		secondProcessorPanel.setLayout(new GridLayout(2,1));
@@ -115,7 +115,7 @@ public class MZ80TestBench implements Runnable {
 		secondProcessorStatus=new JLabel("-");
 		secondProcessorPanel.add(secondProcessorStatus);
 		leftPanel.add(secondProcessorPanel);
-		
+
 		// The progress bar panel
 		progressBarPanel=new JPanel();
 		progressBarPanel.setLayout(new GridLayout(3,1));
@@ -127,9 +127,9 @@ public class MZ80TestBench implements Runnable {
 		executedCommand=new JLabel("-");
 		progressBarPanel.add(executedCommand);
 		leftPanel.add(progressBarPanel);
-		
+
 		GUI.add(leftPanel, BorderLayout.WEST);
-		
+
 		// The action button panel
 		actionPanel=new JPanel();
 		okCancelButton=new JButton("Cancel");
@@ -161,7 +161,7 @@ public class MZ80TestBench implements Runnable {
 	public void setSameCommandRounds(int sameCommandRounds) {
 		this.sameCommandRounds=sameCommandRounds;
 	}
-	
+
 	private boolean wantGui;
 	public void setWantGui(boolean wantGui) {
 		this.wantGui=wantGui;
@@ -171,30 +171,30 @@ public class MZ80TestBench implements Runnable {
 	public void setUla(AddressBusProvider ula) {
 		this.ula=ula;
 	}
-	
-	private Z80 processor1;
-	public void setProcessor1(Z80 processor1) {
+
+	private TestZ80 processor1;
+	public void setProcessor1(TestZ80 processor1) {
 		this.processor1=processor1;
 	}
-	
-	private Z80 processor2;
-	public void setProcessor2(Z80 processor2) {
+
+	private TestZ80 processor2;
+	public void setProcessor2(TestZ80 processor2) {
 		this.processor2=processor2;
 	}
-	
+
 	private DisasmResult dar;
 	private int cmdno;
-	
+
 	/* Very important that these are volatile. */
 	private volatile byte[] result1, result2;
-	
+
 	/**
 	 * Creates simple snapshot from a Z80 system.
 	 * @param z80	The processor
 	 * @param ula	The ULA (containing memory)
 	 * @return	The snapshot
 	 */
-	private synchronized byte[] createSnap(Z80 z80, AddressBusProvider ula) {
+	private synchronized byte[] createSnap(TestZ80 z80, AddressBusProvider ula) {
 		byte[] snap=new byte[0x10000+27];
 		for(int j=0;j<0xffff;j++) {
 			snap[j]=ula.getByte((short)j);
@@ -204,13 +204,13 @@ public class MZ80TestBench implements Runnable {
 		}
 		return snap;
 	}
-	
+
 	/**
 	 * Applies simple snapshot to a Z80 system.
 	 * 
 	 * @see createSnap
 	 */
-	private void applySnap(byte[] snap, Z80 z80, AddressBusProvider ula) {
+	private void applySnap(byte[] snap, TestZ80 z80, AddressBusProvider ula) {
 		for(int j=0;j<0xffff;j++) {
 			ula.setByte((short)j,snap[j]);
 		}
@@ -218,7 +218,7 @@ public class MZ80TestBench implements Runnable {
 			z80.setReg(j,snap[j+0x10000]);
 		}
 	}
-	
+
 	private final String flagBinary(int flags) {
 		String result="";
 		for(int i=7;i>=0;i--) {
@@ -226,7 +226,7 @@ public class MZ80TestBench implements Runnable {
 		}
 		return result;
 	}
-	
+
 	private TestResultSet createResult() {
 		int m=-1,r=-1;
 		for(int i=0;i<0x10000;i++) {
@@ -235,10 +235,10 @@ public class MZ80TestBench implements Runnable {
 				break;
 			}
 		}
-		
+
 		for(int i=0; i<27; i++) {
-			if(i==Z80.R) continue;
-			
+			if(i==TestZ80.R) continue;
+
 			/*
 			 * In case of 'BIT' instructions, undocumented and unknown flags
 			 * are masked out, as their values may depend on processor internal
@@ -249,29 +249,29 @@ public class MZ80TestBench implements Runnable {
 				result1[i+0x10000] &= 0x53;
 				result2[i+0x10000] &= 0x53;
 			}
-			
+
 			/* To avoid contribution of IFF2 to flags in LD A,I  */
 			if((cmdno==0x657) && (i==6)){
 				result1[i+0x10000] &= 0xfb;
 				result2[i+0x10000] &= 0xfb;
 			}
-			
+
 			/* Unknown flags are masked away from INI, OUTI and similar
 			 * instructions */
 			if(((cmdno & 0x6e6)==0x6a2) && (i==6)) {
 				result1[i+0x10000] &= 0x43;
 				result2[i+0x10000] &= 0x43;
 			}
-			
+
 			if(result1[i+0x10000]!=result2[i+0x10000]) {
 				r=i;
 				break;
 			}
 		}
-		
+
 		return new TestResultSet(m,r);
 	}
-	
+
 	private volatile TestResultSet trs;
 	private void reportResultsToGUI() {
 		trs=createResult();
@@ -323,7 +323,7 @@ public class MZ80TestBench implements Runnable {
 				}
 			});
 		}
-		
+
 		if(fail_this) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
@@ -333,7 +333,7 @@ public class MZ80TestBench implements Runnable {
 			});
 		}
 	}
-	
+
 	private void reportResults() {
 		trs=createResult();
 		if(trs.differingMemoryAddress >= 0) {
@@ -348,27 +348,27 @@ public class MZ80TestBench implements Runnable {
 			System.out.println("Value on "+processor2+" is: "+
 					Hex.intToHex2(result2[i]&0xff));
 		}
-		
+
 		if(trs.differingRegisterNumber >= 0) {
 			fail_this=true;
 			int i=trs.differingRegisterNumber;	
 			System.out.println();
 			System.out.println("When applying command: [ "+dar.getHexDigits()+"] "+
 					dar.getCommand());
-			
+
 			/* Flags */
 			if(i==6) {
 				System.out.format("%50s: %8s\n", new Object[] {"Difference on flags", "SZ5H3PNC"});
 				System.out.format("%50s: %8s\n", new Object[] {processor1,flagBinary(result1[i+0x10000]&0xff)});
 				System.out.format("%50s: %8s\n", new Object[] {processor2,flagBinary(result2[i+0x10000]&0xff)});
 
-			/* Interrupts */
+				/* Interrupts */
 			} else if(i==26) {
 				System.out.format("%50s: %8s\n", new Object[] {"Difference on interrupt flags", "----IM21"});
 				System.out.format("%50s: %8s\n", new Object[] {processor1,flagBinary(result1[i+0x10000]&0xff)});
 				System.out.format("%50s: %8s\n", new Object[] {processor2,flagBinary(result2[i+0x10000]&0xff)});
-				
-			/* Registers */
+
+				/* Registers */
 			} else {
 				System.out.println("Difference on register: "+registerName[i]);
 				System.out.println("Value on "+processor1+" is: "+
@@ -377,12 +377,12 @@ public class MZ80TestBench implements Runnable {
 						Hex.intToHex2(result2[i+0x10000]&0xff));
 			}
 		}
-		
+
 		if(fail_this) {
 			System.exit(1);
 		}
 	}
-	
+
 	public void run() {
 
 		/*
@@ -432,8 +432,8 @@ public class MZ80TestBench implements Runnable {
 				Random rand=new Random(System.nanoTime());
 				rand.nextBytes(memory);
 				processor1.reset();
-				processor1.setRegPair(Z80.PC,(short)0x8000);
-				processor1.setRegPair(Z80.SP,(short)0x7ffe);
+				processor1.setRegPair(TestZ80.PC,(short)0x8000);
+				processor1.setRegPair(TestZ80.SP,(short)0x7ffe);
 
 				/* Sets up the command to be tested. */
 				if(cmdno<0x100) {
@@ -474,13 +474,13 @@ public class MZ80TestBench implements Runnable {
 				processor2.setHaltState(false);
 				processor2.executeNextCommand();
 				result2=createSnap(processor2,ula);
-				
+
 				if(wantGui) {
 					reportResultsToGUI();
 				} else {
 					reportResults();
 				}
-				
+
 				if(fail_this) {
 					return;
 				}
@@ -511,7 +511,7 @@ public class MZ80TestBench implements Runnable {
 			msgString="Testing EDh-prefixed commands.";
 			break;
 		}
-		
+
 		if(wantGui) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
@@ -539,7 +539,7 @@ public class MZ80TestBench implements Runnable {
 			System.out.println("\nOK.");
 		}
 	}
-	
+
 	/**
 	 * The main method. Loads a Spring Framework application context and
 	 * testbench bean from it.
@@ -564,14 +564,14 @@ public class MZ80TestBench implements Runnable {
 			new Thread(testBench,"Z80-Testbench-without-GUI").start();
 		}
 	}
-	
+
 	class TestResultSet {
 		/*
 		 * Possibly differing memory address and register number. Set to -1
 		 * if there was no difference in such category.
 		 */
 		int differingMemoryAddress, differingRegisterNumber;
-		
+
 		TestResultSet(int m, int r) {
 			differingMemoryAddress=m;
 			differingRegisterNumber=r;

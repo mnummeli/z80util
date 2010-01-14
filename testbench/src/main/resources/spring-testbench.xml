@@ -1,71 +1,78 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!--
-	The Spring Framework application context (bean factory) definition for
-	Mikko's Z80 Testbench.
-	(C) 2009, Mikko Nummelin <mikko.nummelin@tkk.fi>
-	
-	This program is free software; you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation; either version 2 of the License, or
-	(at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
--->
+	<!--
+		The Spring Framework application context (bean factory) definition for
+		Mikko's Z80 Testbench. (C) 2009, Mikko Nummelin
+		<mikko.nummelin@tkk.fi> This program is free software; you can
+		redistribute it and/or modify it under the terms of the GNU General
+		Public License as published by the Free Software Foundation; either
+		version 2 of the License, or (at your option) any later version. This
+		program is distributed in the hope that it will be useful, but WITHOUT
+		ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+		FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+		for more details. You should have received a copy of the GNU General
+		Public License along with this program; if not, write to the Free
+		Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
+		02111-1307, USA.
+	-->
 
 <beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
            http://www.springframework.org/schema/beans/spring-beans-2.5.xsd">
 
-  <!-- Processors should implement interface org.mn.z80util.z80.Z80 -->
-  <bean id="YazeProcessor" class="org.mn.z80util.z80.yaze.YazeBasedZ80Impl">
-  	<property name="ula" ref="ula"/>
-  </bean>
-  
-  <!-- Processors should implement interface org.mn.z80util.z80.Z80 -->
-  <bean id="QaopProcessor" class="org.mn.z80util.z80.qaop.QaopZ80Impl">
-    <property name="ula" ref="ula"/>
-  </bean>
+	<!--
+		Processors should implement interface org.mn.z80util.z80.TestZ80
+	-->
+	<bean id="YazeProcessor" class="org.mn.z80util.z80.yaze.YazeBasedZ80Impl">
+		<property name="ula" ref="ula" />
+	</bean>
 
-  <!-- Processors should implement interface org.mn.z80util.z80.Z80
-       Note that this is a mock processor which implements the interface
-       but is otherwise empty and should fail every test. It is possible
-       to start from something like this and develop the processor in
-       a test-driven way. -->
-  <bean id="MockProcessor" class="org.mn.z80util.z80.MockZ80">
-    <property name="ula" ref="ula"/>
-  </bean>
+	<!--
+		Processors should implement interface org.mn.z80util.z80.TestZ80
+	-->
+	<bean id="QaopProcessor" class="org.mn.z80util.z80.qaop.QaopZ80Impl">
+		<property name="ula" ref="ula" />
+	</bean>
 
-  <!-- ULA's should implement interface org.mn.z80util.z80.AddressBusProvider -->
-  <bean id="ula" class="org.mn.z80util.z80.MockAddressBusProvider"/>
+	<!--
+		Processors should implement interface org.mn.z80util.z80.TestZ80. Note
+		that this is a mock processor which implements the interface but is
+		otherwise empty and should fail every test. It is possible to start
+		from something like this and develop the processor in a test-driven
+		way.
+	-->
+	<bean id="MockProcessor" class="org.mn.z80util.z80.MockZ80">
+		<property name="ula" ref="ula" />
+	</bean>
 
-  <!-- The actual test bench bean. Exactly two processors and some configuration
-       options must be wired in. -->
-  <bean id="testbench" class="org.mn.z80util.testbench.MZ80TestBench">
-    <property name="processor1" ref="YazeProcessor"/>
-    <property name="processor2" ref="QaopProcessor"/>
-    <!--
+	<!--
+		ULA's should implement interface org.mn.z80util.z80.AddressBusProvider
+	-->
+	<bean id="ula" class="org.mn.z80util.z80.MockAddressBusProvider" />
+
+	<!--
+		The actual test bench bean. Exactly two processors and some
+		configuration options must be wired in.
+	-->
+	<bean id="testbench" class="org.mn.z80util.testbench.MZ80TestBench">
+		<property name="processor1" ref="YazeProcessor" />
+		<property name="processor2" ref="QaopProcessor" />
+		<!--
       <property name="processor2" ref="MockProcessor"/>
     -->
 
-    <property name="ula" ref="ula"/>
-    
-    <!-- Increase this if you want slower and more reliable test.
-         Stands for times one command is tested in a row against
-         different random configurations. -->
-    <property name="sameCommandRounds" value="8"/>
+		<property name="ula" ref="ula" />
 
-	<!-- Whether you want console or graphical interface -->
-    <property name="wantGui" value="true"/>
+		<!--
+			Increase this if you want slower and more reliable test. Stands for
+			times one command is tested in a row against different random
+			configurations.
+		-->
+		<property name="sameCommandRounds" value="8" />
 
-  </bean>
+		<!-- Whether you want console or graphical interface -->
+		<property name="wantGui" value="true" />
+
+	</bean>
 </beans>
