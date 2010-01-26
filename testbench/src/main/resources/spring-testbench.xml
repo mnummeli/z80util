@@ -45,6 +45,16 @@
 	<bean id="MockProcessor" class="org.mn.z80util.z80.MockZ80">
 		<property name="ula" ref="ula" />
 	</bean>
+	
+	<!--
+		In order to compare Java-written processors against a processor written
+		in C++/C/FORTRAN, there should be a Java Native Interface declared.
+		This class, along with its javah-generated header files provides
+		the necessary gateway.
+	 -->
+	<bean id="NativeZ80Gateway" class="org.mn.z80util.z80.jni.NativeZ80Gateway">
+		<property name="ula" ref="ula" />
+	</bean>
 
 	<!--
 		ULA's should implement interface org.mn.z80util.z80.AddressBusProvider
@@ -56,11 +66,10 @@
 		configuration options must be wired in.
 	-->
 	<bean id="testbench" class="org.mn.z80util.testbench.MZ80TestBench">
-		<property name="processor1" ref="YazeProcessor" />
+		<!--  <property name="processor1" ref="YazeProcessor" /> -->
 		<property name="processor2" ref="QaopProcessor" />
-		<!--
-      <property name="processor2" ref="MockProcessor"/>
-    -->
+        <!-- <property name="processor1" ref="MockProcessor"/> -->
+        <property name="processor1" ref="NativeZ80Gateway" />
 
 		<property name="ula" ref="ula" />
 

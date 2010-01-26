@@ -62,14 +62,13 @@ public class MockZ80 implements Z80 {
 		
 	}
 
+	private AddressBusProvider ula;
 	public void setUla(AddressBusProvider ula) {
-		// TODO Auto-generated method stub
-		
+		this.ula=ula;
 	}
 
 	public boolean testFlag(int flag) {
 		// TODO Auto-generated method stub
 		return false;
 	}
-
 }
