@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # This script should be called from the source tree. It generates an
 # appropriate JNI header according to compiled NativeZ80Gateway.
@@ -20,4 +20,9 @@
 # Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-javah -classpath ../../../target/classes org.mn.z80util.z80.jni.NativeZ80Gateway
+if [ -a ../../../target/classes/org/mn/z80util/z80/jni/NativeZ80Gateway.class ] ; then
+    echo 'Creating the NativeZ80 header file ...';
+    javah -classpath ../../../target/classes org.mn.z80util.z80.jni.NativeZ80Gateway;
+else
+    echo 'Please compile the package by running Maven in main directory first.';
+fi
