@@ -28,6 +28,10 @@ package org.mn.z80util.z80.jni;
 import org.mn.z80util.z80.*;
 
 public class NativeZ80Gateway implements TestZ80 {
+	public NativeZ80Gateway() {
+		System.loadLibrary("Z80Gateway");
+	}
+	
 	public native void executeNextCommand();
 	public native byte getReg(int regno);
 	public native short getRegPair(int regpairno);
