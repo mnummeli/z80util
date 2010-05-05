@@ -56,6 +56,8 @@ JNIEXPORT jshort JNICALL Java_org_mn_z80util_z80_jni_NativeZ80Gateway_getRegPair
  */
 JNIEXPORT void JNICALL Java_org_mn_z80util_z80_jni_NativeZ80Gateway_reset
   (JNIEnv *envP, jobject thisP) {
+		cout << "--> reset.";
+
 	  // Initializes singleton object.
 	  z80=NativeMNZ80::getProcessor();
 	  z80->reset();

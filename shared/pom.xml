@@ -25,7 +25,7 @@
 	<parent>
 		<groupId>org.mn.z80util</groupId>
 		<artifactId>z80util</artifactId>
-		<version>${z80util_version}</version>
+		<version>0.92-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.mn.z80util</groupId>
@@ -44,7 +44,6 @@
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.14</version>
-			<scope>compile</scope>
 		</dependency>
 	</dependencies>
 </project>
