@@ -38,8 +38,8 @@
 		</plugins>
 	</build>
 	<modules>
-		<module>../shared</module>
-		<module>../spectrum</module>
-		<module>../testbench</module>
+		<module>shared</module>
+		<module>spectrum</module>
+		<module>testbench</module>
 	</modules>
 </project>
