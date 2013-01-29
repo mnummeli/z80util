@@ -18,33 +18,31 @@
  * Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
 package org.mn.z80util.z80;
 
 import java.io.*;
 
 public interface Snapshot {
-	
-	/**
-	 * Reads the snapshot contents from specified input stream.
-	 * The possibly empty snapshot must be obtained in platform-specific
-	 * manner.
-	 * 
-	 * @param is	The input stream.
-	 */
-	void read(InputStream is);
-	
-	/**
-	 * Writes the snapshot to specified output stream.
-	 * The snapshot must be obtained in platform-specific manner.
-	 * 
-	 * @param os	The output stream.
-	 */
-	void write(OutputStream os);
-	
-	/**
-	 * Writes the snapshot to default processor configuration,
-	 * whatever that is and if such exists.
-	 */
-	void write();
+
+    /**
+     * Reads the snapshot contents from specified input stream. The possibly
+     * empty snapshot must be obtained in platform-specific manner.
+     *
+     * @param is	The input stream.
+     */
+    void read(InputStream is);
+
+    /**
+     * Writes the snapshot to specified output stream. The snapshot must be
+     * obtained in platform-specific manner.
+     *
+     * @param os	The output stream.
+     */
+    void write(OutputStream os);
+
+    /**
+     * Writes the snapshot to default processor configuration, whatever that is
+     * and if such exists.
+     */
+    void write();
 }
