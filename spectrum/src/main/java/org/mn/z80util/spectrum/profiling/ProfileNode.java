@@ -18,23 +18,22 @@
  * Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
 package org.mn.z80util.spectrum.profiling;
 
 import java.util.*;
 
 public class ProfileNode {
-	boolean startBlock=false, endBlock=false;
-	
-	long density=0L;
-	TreeSet<Integer> predecessors=new TreeSet<Integer>(),
-		successors=new TreeSet<Integer>();
-	
-	void addPredecessor(int address) {
-		predecessors.add(address);
-	}
-	
-	void addSuccessor(int address) {
-		successors.add(address);
-	}
+
+    boolean startBlock = false, endBlock = false;
+    long density = 0L;
+    TreeSet<Integer> predecessors = new TreeSet<Integer>(),
+            successors = new TreeSet<Integer>();
+
+    void addPredecessor(int address) {
+        predecessors.add(address);
+    }
+
+    void addSuccessor(int address) {
+        successors.add(address);
+    }
 }
