@@ -454,8 +454,8 @@ public class YazeBasedALU {
     }
 
     /**
-     * This should be called ONLY, when assigning register A the value of
-     * either I or R register.
+     * This should be called ONLY, when assigning register A the value of either
+     * I or R register.
      *
      * @param ir	Value of I or R register.
      * @param iff2	Value of IFF2 interrupt flip-flop.
@@ -470,7 +470,7 @@ public class YazeBasedALU {
      * Performs right rotation of BCD values.
      *
      * @param ihl	Previous value of (hl)
-     * @return		New value of (hl)
+     * @return	New value of (hl)
      */
     public int rrd(int ihl) {
         int temp = ihl & 0xff;
@@ -486,7 +486,7 @@ public class YazeBasedALU {
      * Performs left rotation of BCD values.
      *
      * @param ihl	Previous value of (hl)
-     * @return		New value of (hl)
+     * @return	New value of (hl)
      */
     public int rld(int ihl) {
         int temp = ihl & 0xff;
