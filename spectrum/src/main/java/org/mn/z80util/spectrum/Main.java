@@ -106,10 +106,9 @@ public class Main {
         }
 
         SwingUtilities.invokeLater(new Runnable() {
-
             /**
-             * Creates the GUI in the event dispatching thread as recommended
-             * by Sun.
+             * Creates the GUI in the event dispatching thread as recommended by
+             * Sun.
              */
             @Override
             public void run() {

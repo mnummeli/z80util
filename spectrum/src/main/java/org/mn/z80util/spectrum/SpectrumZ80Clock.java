@@ -114,9 +114,9 @@ public class SpectrumZ80Clock implements Runnable {
 
     /* Processor loop routines */
     /**
-     * The snapshot handling routine is passed through in both normal
-     * processor cycle AND when paused/in stepping mode. In pause mode
-     * it nevertheless requires an appropriate notifyAll().
+     * The snapshot handling routine is passed through in both normal processor
+     * cycle AND when paused/in stepping mode. In pause mode it nevertheless
+     * requires an appropriate notifyAll().
      */
     private void snapshotTrap() {
         if (snapshotImportFileType != NONE) {
@@ -169,8 +169,8 @@ public class SpectrumZ80Clock implements Runnable {
     }
 
     /**
-     * A single processor step. Should be as fast as possible if not
-     * in stepping mode.
+     * A single processor step. Should be as fast as possible if not in stepping
+     * mode.
      */
     private void processorStep() {
         if (stepMode) {
@@ -195,7 +195,6 @@ public class SpectrumZ80Clock implements Runnable {
 
                 try {
                     SwingUtilities.invokeLater(new Runnable() {
-
                         @Override
                         public void run() {
                             gui.updateDebuggerInfo();
@@ -213,8 +212,8 @@ public class SpectrumZ80Clock implements Runnable {
     }
 
     /**
-     * Processor frame of approximately 224 T-States. In this period,
-     * one screen line is drawn.
+     * Processor frame of approximately 224 T-States. In this period, one screen
+     * line is drawn.
      */
     private void processorFrame() {
         int ts = z80.getTStates();
