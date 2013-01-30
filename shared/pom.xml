@@ -12,39 +12,39 @@
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 59 Temple Place - Suite 330,
-	Boston, MA 02111-1307, USA.
+        You should have received a copy of the GNU General Public License
+        along with this program; if not, write to the Free Software
+        Foundation, Inc., 59 Temple Place - Suite 330,
+        Boston, MA 02111-1307, USA.
 -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 \
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 \
 		http://maven.apache.org/maven-v4_0_0.xsd">
-	<parent>
-		<groupId>org.mn.z80util</groupId>
-		<artifactId>z80util</artifactId>
-		<version>0.92-SNAPSHOT</version>
-	</parent>
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.mn.z80util</groupId>
-	<artifactId>z80util-shared</artifactId>
-	<packaging>jar</packaging>
-	<name>z80util-shared</name>
-	<url>http://www.tkk.fi/~mnummeli</url>
-	<dependencies>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>1.2.14</version>
-		</dependency>
-	</dependencies>
+    <parent>
+        <groupId>org.mn.z80util</groupId>
+        <artifactId>z80util</artifactId>
+        <version>0.92-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.mn.z80util</groupId>
+    <artifactId>z80util-shared</artifactId>
+    <packaging>jar</packaging>
+    <name>z80util-shared</name>
+    <url>http://www.tkk.fi/~mnummeli</url>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.14</version>
+        </dependency>
+    </dependencies>
 </project>
 
