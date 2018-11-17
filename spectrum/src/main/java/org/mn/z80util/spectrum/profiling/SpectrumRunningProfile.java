@@ -90,7 +90,7 @@ public class SpectrumRunningProfile {
      *
      * An existing profile node is an <b>end block node</b> if and only if: <ul>
      * <li>its address is 52h; or</li> <li>its successor count differs from one;
-     * or</li> <li>it has a successor with higher or equal address than its own
+     * or</li> <li>it has a successor with lesser or equal address than its own
      * address; or</li> <li>it has a successor which is a <i>start block
      * node</i></li> </ul>
      *
